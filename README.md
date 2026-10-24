@@ -84,6 +84,8 @@ sudo systemctl enable --now maaend-webui
 # 6. 打开 http://<SERVER_IP>:8787/setup 初始化管理员
 ```
 
+> 项目**不提供默认账号或默认密码**；请在 `/setup` 页面自行创建管理员账号（密码至少 8 位）。
+
 ## 目录结构
 
 ```text

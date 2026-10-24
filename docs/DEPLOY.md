@@ -146,6 +146,47 @@ http://<SERVER_IP>:8787/setup
 
 如果面板没有生成初始化页，检查 `users.json` 是否已存在；忘记密码时，管理员可在服务器上备份/移走 `users.json` 后重新初始化。
 
+### 5.2 Docker 部署（可选）
+
+如果不想在宿主机直接运行 `webui.py`，可以使用已构建的镜像：
+
+```text
+xl233/endfield-cloud-ops:latest
+```
+
+镜像包含面板、Chrome、headless sway、wayvnc、websockify、noVNC 和 cron；MaaEnd 本体与 venv 仍从宿主机挂载：
+
+```bash
+docker pull xl233/endfield-cloud-ops:latest
+
+docker run -d --name endfield-cloud-ops \
+  --restart unless-stopped \
+  -p 8787:8787 \
+  --shm-size=1g \
+  -v /home/maa/maaend:/home/maa/maaend \
+  -v /home/maa/venv:/home/maa/venv \
+  -v endfield-config:/home/maa/.config \
+  -v endfield-data:/home/maa/data \
+  xl233/endfield-cloud-ops:latest
+```
+
+首次启动后访问：
+
+```text
+http://<SERVER_IP>:8787/setup
+```
+
+**项目不提供默认账号，也不提供默认密码**；请在 `/setup` 页面自行创建管理员账号（密码至少 8 位）。
+
+说明：
+
+- 必须挂载 `/home/maa/maaend` 和 `/home/maa/venv`，否则任务无法运行。
+- 面板数据保存在 `endfield-data` 卷（`users.json`、`tasks.json`、`schedule.json` 等），Chrome/账号状态保存在 `endfield-config` 卷。
+- 容器内自带 Chrome + sway，任务和实时画面都在容器内执行；接管通过 `/vnc/*` 反代，不需要放行 6080。
+- 镜像默认是公开的；如果改为私有，先 `docker login`。
+- 完整说明见 [docker/README.md](../docker/README.md)。
+- 使用 Docker 时不需要再安装第 5 节的 systemd 服务；两者选一种即可。
+
 ## 6. 定时任务
 
 面板 **OPERATION → AUTO START → 设置**：
@@ -295,7 +336,7 @@ sudo systemctl daemon-reload
 
 ## 11. 安全清单
 
-- [ ] 修改初始管理员密码，不使用示例密码
+- [ ] 首次初始化时设置强密码（项目不提供默认账号/密码）
 - [ ] 面板只开放给内网 / 固定 IP，或放在 HTTPS 反向代理后
 - [ ] 不暴露 6080；VNC 仅通过 `/vnc/*` 反代
 - [ ] 不提交 `users.json`、`game-accounts.json`、`active-profile`、token

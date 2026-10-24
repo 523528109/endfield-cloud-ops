@@ -2,6 +2,8 @@
 
 镜像：`xl233/endfield-cloud-ops:latest`
 
+> 本项目**不提供默认账号或默认密码**。首次启动后访问 `/setup` 自行创建管理员账号（密码至少 8 位）。
+
 这是一个**面板运行时镜像**，包含：
 
 - 面板 `webui.py` / 静态前端 / web runner overlays
@@ -9,7 +11,20 @@
 - Python 的 `websocket-client` / `Pillow`
 - cron（面板定时任务）
 
-它**不包含** MaaEnd 本体和 MaaEnd 的 Python venv；运行时挂载现有 MaaEnd：
+它**不包含** MaaEnd 本体和 MaaEnd 的 Python venv；运行时挂载现有 MaaEnd。
+
+### 前提
+
+宿主机上已经安装并配置好：
+
+```text
+/home/maa/maaend     # 包含 interface.json / tasks/ / agent/ / maafw/
+/home/maa/venv       # 包含 maa Python 模块
+```
+
+没有这两个目录时镜像仍能启动面板，但任务会失败。
+
+运行时挂载现有 MaaEnd：
 
 ```bash
 docker run -d --name endfield-cloud-ops \
@@ -23,11 +38,13 @@ docker run -d --name endfield-cloud-ops \
   xl233/endfield-cloud-ops:latest
 ```
 
-首次启动会在 `/home/maa/data` 生成管理员初始化状态，打开：
+首次启动后打开：
 
 ```text
 http://<SERVER_IP>:8787/setup
 ```
+
+在页面里创建管理员账号。项目没有内置默认账号，也没有默认密码。
 
 ### 目录
 
