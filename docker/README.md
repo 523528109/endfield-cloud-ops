@@ -51,3 +51,13 @@ docker exec endfield-cloud-ops tail -50 /tmp/chrome-endfield.log
 ```
 
 - MaaEnd 升级仍然通过面板「更新 Maa」进行，更新的是挂载进来的 `/home/maa/maaend`。
+
+## 自动构建
+
+仓库已配置 `.github/workflows/docker.yml`：
+
+- 推送到 `main`、创建 `v*` tag，或手动 `workflow_dispatch` 时触发
+- 使用 `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` 两个 GitHub Actions secrets 登录 Docker Hub
+- 自动推送 `latest`、commit SHA、版本 tag
+- 构建完成后会启动容器做健康检查，再删除临时容器
+
