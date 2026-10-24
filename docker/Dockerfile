@@ -27,8 +27,10 @@ RUN curl -fsSL https://dl.google.com/linux/direct/google-chrome-stable_current_a
 RUN python3 -m pip install --break-system-packages --no-cache-dir \
         websocket-client Pillow
 
-RUN groupadd -g 1000 maa 2>/dev/null || true \
-    && useradd -u 1000 -g maa -m -d /home/maa -s /bin/bash maa 2>/dev/null || true
+RUN userdel -r ubuntu 2>/dev/null || true \
+    && groupdel ubuntu 2>/dev/null || true \
+    && groupadd -g 1000 maa \
+    && useradd -u 1000 -g maa -m -d /home/maa -s /bin/bash maa
 
 COPY panel/webui.py panel/gen_catalog.py /home/maa/maaend-webui/
 COPY panel/static/ /home/maa/maaend-webui/static/
