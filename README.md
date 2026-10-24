@@ -118,6 +118,26 @@ sudo systemctl enable --now maaend-webui
 - 面板启动/停止、预设切换、定时、Maa 更新、VNC 代理、桌面/移动端布局均已验证
 - 云游戏排队可能长达约 40 分钟；`WebStartGame` 上限 2 小时，普通任务默认 420 秒
 
+## Docker
+
+镜像：`xl233/endfield-cloud-ops:latest`
+
+该镜像包含面板、Chrome、headless sway、wayvnc、websockify、noVNC 和 cron；**不包含 MaaEnd 本体/venv**，运行时挂载现有 MaaEnd：
+
+```bash
+docker run -d --name endfield-cloud-ops \
+  --restart unless-stopped \
+  -p 8787:8787 \
+  --shm-size=1g \
+  -v /home/maa/maaend:/home/maa/maaend \
+  -v /home/maa/venv:/home/maa/venv \
+  -v endfield-config:/home/maa/.config \
+  -v endfield-data:/home/maa/data \
+  xl233/endfield-cloud-ops:latest
+```
+
+详细说明见 [docker/README.md](docker/README.md)。
+
 ## 安全提示
 
 - 首次部署后立即设置强密码；不要继续使用示例/临时密码。

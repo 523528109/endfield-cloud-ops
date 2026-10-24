@@ -30,20 +30,22 @@ from PIL import Image
 BASE = os.environ.get("MAAEND_HOME", "/home/maa")
 ROOT = os.environ.get("MAAEND_ROOT", BASE + "/maaend")
 WEB = ROOT + "/web/linux"
-STATIC = BASE + "/maaend-webui/static"
+PANEL_DIR = BASE + "/maaend-webui"
+DATA_DIR = os.environ.get("MAAEND_DATA_DIR", PANEL_DIR)
+STATIC = PANEL_DIR + "/static"
 PY = BASE + "/venv/bin/python"
 CDP = WEB + "/cdp_tool.py"
 RUNNER = WEB + "/homesrv/daily_run_homesrv.sh"
 LOGS = [ROOT + "/daily.log", BASE + "/full_daily.log", BASE + "/webui-run.log"]
-SHOT = BASE + "/maaend-webui/shot.jpg"
-RAW = BASE + "/maaend-webui/raw.png"
-TOKEN_FILE = BASE + "/maaend-webui/token"
-AUTH_FILE = BASE + "/maaend-webui/auth.conf"
+SHOT = DATA_DIR + "/shot.jpg"
+RAW = DATA_DIR + "/raw.png"
+TOKEN_FILE = DATA_DIR + "/token"
+AUTH_FILE = DATA_DIR + "/auth.conf"
 WAYVNC_CFG_DIR = BASE + "/.config/wayvnc"
 WAYVNC_CFG = WAYVNC_CFG_DIR + "/config"
-VNC_TOKEN_FILE = BASE + "/maaend-webui/vnc-token"
-NOVNC_DIR = BASE + "/maaend-webui/novnc"
-PROGRESS_FILE = BASE + "/maaend-webui/progress.json"
+VNC_TOKEN_FILE = DATA_DIR + "/vnc-token"
+NOVNC_DIR = PANEL_DIR + "/novnc"
+PROGRESS_FILE = DATA_DIR + "/progress.json"
 PORT = int(os.environ.get("WEBUI_PORT", "8787"))
 BIND = os.environ.get("WEBUI_BIND", "0.0.0.0")
 FULL_DAILY = ["WebStartGame", "VisitFriends", "DijiangRewards", "CreditShoppingN2",
@@ -51,7 +53,7 @@ FULL_DAILY = ["WebStartGame", "VisitFriends", "DijiangRewards", "CreditShoppingN
               "GearAssembly", "WeaponUpgrade", "DailyRewards"]
 TASKS = list(FULL_DAILY)
 _starting = {"tasks": [], "at": 0}
-CATALOG_FILE = BASE + "/maaend-webui/tasks.json"
+CATALOG_FILE = DATA_DIR + "/tasks.json"
 MAA_ROOT = ROOT
 MAA_CONFIG = MAA_ROOT + "/config/mxu-MaaEnd.json"
 MAA_INTERFACE = MAA_ROOT + "/interface.json"
@@ -63,12 +65,12 @@ MAA_LOCALE = MAA_ROOT + "/locales/interface/zh_cn.json"
 STOP_MARK = ROOT + "/.manual_stop"
 PRESET_ORDER = ["DailyFull", "QuickDaily", "RealtimeAssist", "AutoEssence"]
 PY3 = BASE + "/venv/bin/python"
-SCHEDULE_FILE = BASE + "/maaend-webui/schedule.json"
-USERS_FILE = BASE + "/maaend-webui/users.json"
+SCHEDULE_FILE = DATA_DIR + "/schedule.json"
+USERS_FILE = DATA_DIR + "/users.json"
 SESSION_COOKIE = "ef_sid"
 SESSION_TTL = 7 * 86400
-GAME_ACCOUNTS_FILE = BASE + "/maaend-webui/game-accounts.json"
-ACTIVE_PROFILE_FILE = BASE + "/maaend-webui/active-profile"
+GAME_ACCOUNTS_FILE = DATA_DIR + "/game-accounts.json"
+ACTIVE_PROFILE_FILE = DATA_DIR + "/active-profile"
 DEFAULT_PROFILE = BASE + "/.config/endfield-web"
 GAME_PROFILE_DIR = BASE + "/.config/endfield-accounts"
 CLOUD_URL = "https://endfield.hypergryph.com/cloud"
@@ -318,8 +320,9 @@ def _maa_update_worker():
     if after and after != before:
         message = "已更新 %s → %s" % (before, after)
         try:
-            gen = subprocess.run([PY3, BASE + "/maaend-webui/gen_catalog.py"],
-                                 cwd=BASE + "/maaend-webui", env=env,
+            env["MAAEND_DATA_DIR"] = DATA_DIR
+            gen = subprocess.run([PY3, PANEL_DIR + "/gen_catalog.py"],
+                                 cwd=PANEL_DIR, env=env,
                                  capture_output=True, text=True, timeout=300)
             output += "\n[catalog]\n" + (gen.stdout or "") + (gen.stderr or "")
             reload_catalog()
@@ -342,7 +345,7 @@ def _maa_update_worker():
                             "message": message, "output": output[-4000:]})
 
 
-os.makedirs(BASE + "/maaend-webui", exist_ok=True)
+os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(STATIC, exist_ok=True)
 if os.path.exists(TOKEN_FILE):
     TOKEN = open(TOKEN_FILE).read().strip()

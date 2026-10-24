@@ -1,0 +1,13 @@
+.git
+.github
+docs
+deploy
+LICENSE
+NOTICE.md
+README.md
+*.md
+!docker/README.md
+**/__pycache__
+**/*.pyc
+**/*.log
+**/*.bak*

@@ -7,7 +7,8 @@ import time
 
 MAA_ROOT = os.environ.get("MAAEND_ROOT", "/home/maa/maaend")
 PANEL_DIR = os.environ.get("MAAEND_WEBUI_DIR", os.environ.get("MAAEND_HOME", "/home/maa") + "/maaend-webui")
-CATALOG = os.path.join(PANEL_DIR, "tasks.json")
+DATA_DIR = os.environ.get("MAAEND_DATA_DIR", PANEL_DIR)
+CATALOG = os.path.join(DATA_DIR, "tasks.json")
 CONFIG = os.path.join(MAA_ROOT, "config", "mxu-MaaEnd.json")
 LOCALE = os.path.join(MAA_ROOT, "locales", "interface", "zh_cn.json")
 QUEUE_INSTANCE = "panel-queue"
