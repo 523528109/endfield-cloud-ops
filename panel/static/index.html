@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENDFIELD // CLOUD OPS</title>
+<meta name="description" content="云·终末地 · MaaEnd 自动作业控制台">
+<script>
+  try {
+    var q = new URLSearchParams(location.search).get('theme');
+    var t = q || localStorage.getItem('ef-theme') || 'light';
+    document.documentElement.dataset.theme = (t === 'dark' ? 'dark' : 'light');
+  } catch (e) {}
+</script>
+<link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
+<link rel="preload" href="/static/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/style.css?v=20261024l">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<div class="loadbar" id="loadbar" aria-hidden="true"><span></span></div>
+
+<svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <symbol id="i-console" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-tasks" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M2 6h.01M2 12h.01M2 18h.01"/></symbol>
+  <symbol id="i-log" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M7 9l3 3-3 3M12 15h5"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H4v16h6M14 8l4 4-4 4M18 12H8"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="12" r="4"/><path d="M12 12h9M17 9v6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 10-3 6M20 5v7h-7"/></symbol>
+  <symbol id="i-theme" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18"/><path d="M12 3v18"/><path d="M12 3h9v18h-9z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12"/><path d="M16 8V4H4v12h4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="M15 15l6 6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4-4 7-8 9-4-2-8-5-8-9V6z"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="rail" aria-label="站点导航">
+    <div class="rail-brand">
+      <img class="brand-logo" src="/static/assets/logo.svg" alt="明日方舟：终末地">
+    </div>
+
+    <nav class="rail-nav" aria-label="主导航">
+      <div class="rail-group">// OPERATIONS</div>
+      <a class="rail-item" href="#live" data-section="live" aria-current="page">
+        <svg class="icon" aria-hidden="true"><use href="#i-console"/></svg>
+        <span>控制台</span><span class="end">01</span>
+      </a>
+      <a class="rail-item" href="#library" data-section="library">
+        <svg class="icon" aria-hidden="true"><use href="#i-tasks"/></svg>
+        <span>任务库</span><span class="end">02</span>
+      </a>
+      <a class="rail-item" href="#log" data-section="log">
+        <svg class="icon" aria-hidden="true"><use href="#i-log"/></svg>
+        <span>运行日志</span><span class="end">03</span>
+      </a>
+      <a class="rail-item" href="#settings" data-section="settings">
+        <svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg>
+        <span>系统设置</span><span class="end">04</span>
+      </a>
+    </nav>
+
+    <div class="rail-tools">
+      <button class="btn btn-text btn-sm" id="railTheme" type="button">
+        <svg class="icon icon-sm" aria-hidden="true"><use href="#i-theme"/></svg>
+        <span id="railThemeLabel">切换深色</span>
+      </button>
+    </div>
+
+    <div class="rail-foot">
+      <div class="meta"><span>NODE</span><b id="railNode">127.0.0.1</b></div>
+      <div class="meta"><span>STACK</span><b id="maaStack">MAAEND v2.35.0</b></div>
+      <div class="meta"><span>PROTO</span><b>09 / CLOUD</b></div>
+    </div>
+    <div class="rail-ghost" aria-hidden="true">EF</div>
+  </aside>
+
+  <div class="stage">
+    <header class="topbar">
+      <div class="tb-brand">
+        <img class="brand-logo" src="/static/assets/logo.svg" alt="明日方舟：终末地">
+      </div>
+      <div class="tb-title">
+        <span class="micro">// CLOUD OPS</span>
+        <h2 id="topTitle">CONSOLE</h2>
+      </div>
+      <div class="tb-tools">
+        <span class="status-chip" id="linkChip"><i></i><span>LINK</span></span>
+        <span class="tb-clock tech" id="clock">--:--:--</span>
+        <span class="user-chip" id="userChip" hidden>—</span>
+        <button class="btn-icon sm" id="themeBtn" type="button" aria-label="切换明暗主题" title="切换明暗主题">
+          <span class="theme-ico" aria-hidden="true"></span>
+        </button>
+        <button class="btn-icon sm" id="logoutBtn" type="button" aria-label="退出登录" title="退出登录" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg>
+        </button>
+        <button class="btn-icon sm menu-btn" id="menuBtn" type="button" aria-label="打开菜单" title="菜单">
+          <svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="section" id="live" data-nav="live" style="margin-top:0">
+        <header class="page-head">
+          <div class="page-head-copy">
+            <p class="breadcrumb">// CLOUD / CONSOLE</p>
+            <p class="meta-line">// OPERATIONS　NODE <b id="nodeAddr">127.0.0.1</b>　·　<span id="maaMeta">MAAEND v2.35.0</span></p>
+            <h1>Cloud Ops <em>云·终末地 自动作业控制台</em></h1>
+            <p class="page-desc">实时画面、日常调度与运行日志。每一项任务都在本机 Chrome 云会话中执行，跑完自动收尾。</p>
+          </div>
+          <div class="page-actions">
+            <a class="btn btn-control btn-sm" href="#library">
+              <span>任务库</span>
+            </a>
+            <button class="btn btn-light btn-sm" id="refreshBtn" type="button">
+              <svg class="icon icon-sm" aria-hidden="true"><use href="#i-refresh"/></svg>
+              <span>刷新</span>
+            </button>
+          </div>
+          <span class="ghost-word" aria-hidden="true">// OPS</span>
+        </header>
+
+        <div class="live-grid">
+          <article class="panel viewport-panel">
+            <header class="panel-head">
+              <span class="bar" aria-hidden="true"></span>
+              <h2>Live Feed <em>实时画面</em></h2>
+              <span class="live-chip" id="liveChip"><i aria-hidden="true"></i>LIVE</span>
+              <span class="shot-state" id="shotState" role="status"></span>
+              <span class="code">CAM-01 / 16:9</span>
+            </header>
+            <div class="viewport corners" id="viewport" role="button" tabindex="0" aria-label="放大实时画面">
+              <img id="shot" alt="云·终末地实时画面">
+              <div class="ph" id="noSignal">
+                <span class="ph-crosshair" aria-hidden="true"><i></i></span>
+                <span class="ph-code">NO SIGNAL</span>
+                <span class="ph-sub">浏览器未启动 / 等待画面</span>
+              </div>
+              <div class="hud hud-tl"><span>CLOUD·ENDFIELD</span><span class="tech" id="hudClock">--:--:--</span></div>
+              <div class="hud hud-tr"><span id="hudRes">1706×960</span><span>16:9</span></div>
+              <div class="hud hud-bl"><span class="tech" id="hudTask">STBY</span><span id="hudMem">-- MB FREE</span></div>
+            </div>
+            <div class="viewport-bar">
+              <div class="attr"><span class="micro">STREAM</span><b id="chromeState">OFFLINE</b></div>
+              <div class="attr"><span class="micro">MEMORY</span><b id="memState">--</b></div>
+              <div class="attr"><span class="micro">UPTIME</span><b class="tech" id="uptime">--</b></div>
+              <button class="btn btn-text btn-sm" id="expandBtn" type="button">
+                <span>全屏画面</span>
+                <svg class="icon icon-sm" aria-hidden="true"><use href="#i-expand"/></svg>
+              </button>
+            </div>
+          </article>
+
+          <aside class="panel ops-panel" id="opsPanel">
+            <header class="panel-head band">
+              <span class="bar" aria-hidden="true"></span>
+              <h2>Operation <em>作业控制</em></h2>
+              <span class="code">OPS-01</span>
+            </header>
+
+            <div class="state-block">
+              <div class="state-line">
+                <span class="state-code" id="stateCode">STBY</span>
+                <span class="state-text" id="stateText">待命</span>
+              </div>
+              <p class="state-sub" id="stateSub">等待指令 / 上次运行 —</p>
+            </div>
+
+            <div class="preset-block">
+              <div class="preset-head">
+                <span class="micro">MAA PRESET</span>
+                <span class="tech" id="presetCount">—</span>
+              </div>
+              <div class="preset-grid" id="presetGrid"></div>
+              <p class="preset-desc" id="presetDesc">正在读取 Maa 预设…</p>
+            </div>
+
+            <div class="action-stack">
+              <button class="btn btn-action btn-lg" id="startBtn" type="button">
+                <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>
+                <span>开始全套日常</span>
+              </button>
+              <button class="btn btn-control" id="stopBtn" type="button">
+                <span>停止</span>
+              </button>
+            </div>
+            <p class="daily-note" id="startNote">默认全套 11 项，跑完自动收尾；单项失败会继续下一项，不会中断整轮。</p>
+
+            <div class="strip-row">
+              <button class="btn btn-control btn-sm" id="takeoverBtn" type="button">
+                <span id="takeoverLabel">接管控制</span>
+              </button>
+              <span class="status-tag" id="takeoverState">OFFLINE</span>
+            </div>
+
+            <dl class="attr-list">
+              <div class="attr-row">
+                <dt>GAME ACCOUNT</dt>
+                <dd id="gameAccountName">—</dd>
+                <button class="btn btn-text btn-xs" id="openGameAccounts" type="button">管理</button>
+              </div>
+              <div class="attr-row">
+                <dt>AUTO START</dt>
+                <dd id="schedSummary">—</dd>
+                <button class="btn btn-text btn-xs" id="openSchedule" type="button">设置</button>
+              </div>
+            </dl>
+
+            <div class="progress-block">
+              <div class="progress-head">
+                <span class="micro">PROGRESS</span>
+                <span class="tech" id="progressText">00 / 00</span>
+              </div>
+              <div class="segments" id="progressBar" role="progressbar" aria-label="日常任务进度" aria-valuemin="0" aria-valuemax="11" aria-valuenow="0"></div>
+            </div>
+
+            <ol class="task-list" id="taskList"></ol>
+
+            <div class="panel-foot">
+              <span class="micro">LAST RESULT</span>
+              <span class="tech" id="lastResult">—</span>
+            </div>
+          </aside>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat"><span class="micro">// LAST PASS</span><b id="statPass">—</b><small id="statPassSub">等待首次运行</small></div>
+          <div class="stat"><span class="micro">// NEXT RUN</span><b id="statNext">—</b><small id="statNextSub">AUTO START</small></div>
+          <div class="stat"><span class="micro">// MEMORY USED</span><b id="statMem">—</b><small id="statMemSub">USED / AVAILABLE</small></div>
+          <div class="stat"><span class="micro">// UPTIME</span><b id="statUptime">—</b><small id="statUptimeSub">CURRENT RUN</small></div>
+        </div>
+      </section>
+
+      <section class="section" id="library" data-nav="library">
+        <header class="section-head">
+          <div>
+            <p class="eyebrow">TASK LIBRARY</p>
+            <h2>任务库</h2>
+            <p class="desc">从 MaaEnd 的 <span id="libraryIntroCount">49</span> 项任务中挑选要执行的项目。勾选后点右侧「执行待选」；整套日常请用上方的预设。</p>
+          </div>
+          <div class="section-actions">
+            <button class="btn btn-text btn-sm" id="clearQueue" type="button">清空待选</button>
+          </div>
+        </header>
+
+        <div class="library-grid">
+          <div class="lib-panel">
+            <div class="lib-tools">
+              <label class="search">
+                <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+                <input id="taskSearch" type="search" placeholder="搜索任务 / NAME / 描述" autocomplete="off" spellcheck="false" aria-label="搜索任务">
+              </label>
+              <span class="micro" id="catalogCount">— TASKS</span>
+            </div>
+            <div class="lib-list" id="taskLibrary"></div>
+          </div>
+
+          <aside class="queue-panel" aria-label="待选任务">
+            <div class="queue-head">
+              <span class="micro">STANDBY QUEUE</span>
+              <span class="tech" id="queueCount">00</span>
+            </div>
+            <div class="queue-chips" id="queueChips"></div>
+            <button class="btn btn-control btn-lg" id="runQueue" type="button" style="width:100%">
+              <span>执行待选任务</span>
+            </button>
+            <p class="queue-note">只执行勾选任务；要跑整套请用上方的预设。任务互斥时以运行为准。</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section section-dark" id="log" data-nav="log" data-theme="dark">
+        <header class="section-head">
+          <div>
+            <p class="eyebrow">SYSTEM LOG</p>
+            <h2>运行日志</h2>
+            <p class="desc">最近一次运行的输出，按状态着色。面板不会伪造进度，日志停更就代表任务停更。</p>
+          </div>
+          <div class="section-actions">
+            <span class="status-tag" id="logSource">—</span>
+            <button class="btn btn-light btn-sm" id="logCopy" type="button">
+              <svg class="icon icon-sm" aria-hidden="true"><use href="#i-copy"/></svg>
+              <span>复制</span>
+            </button>
+          </div>
+        </header>
+        <div class="log-wrap">
+          <div class="log-toolbar">
+            <span class="micro">TAIL / 45 LINES</span>
+            <label class="log-follow"><input type="checkbox" id="logFollow" checked>自动跟随</label>
+          </div>
+          <div class="log-body" id="logBody" role="log" aria-live="polite" aria-label="运行日志"></div>
+        </div>
+      </section>
+
+      <section class="section" id="settings" data-nav="settings">
+        <header class="section-head">
+          <div>
+            <p class="eyebrow">SYSTEM</p>
+            <h2>系统设置</h2>
+            <p class="desc">节点状态、访问控制与账号管理。管理员可开启 token 后备入口、轮换密钥和添加面板账号。</p>
+          </div>
+        </header>
+
+        <div class="settings-grid">
+          <div class="panel">
+            <header class="panel-head">
+              <span class="bar" aria-hidden="true"></span>
+              <h2>System <em>节点</em></h2>
+              <span class="code">SYS-01</span>
+            </header>
+            <dl class="attr-table">
+              <div class="row"><dt>SERVER TIME</dt><dd id="serverTime">—</dd></div>
+              <div class="row"><dt>CHROME</dt><dd id="chromeState2">—</dd><span class="status-tag" id="chromeTag">OFFLINE</span></div>
+              <div class="row"><dt>MEMORY USED</dt><dd id="memAvail">—</dd></div>
+              <div class="row"><dt>LOG SOURCE</dt><dd id="logFile">—</dd></div>
+              <div class="row"><dt>NODE</dt><dd id="nodeAddr2">127.0.0.1:8787</dd></div>
+              <div class="row"><dt>MAAEND</dt><dd id="maaSettingVersion">v2.35.0 / 49 TASKS</dd></div>
+              <div class="row"><dt>PIPELINE</dt><dd>webcloud · 1706×960</dd></div>
+            </dl>
+            <div class="setting-row shot-rate-row">
+              <div class="setting-copy">
+                <b>实时截图帧率</b>
+                <p>仅影响面板预览流畅度与系统资源占用，不影响 Maa 任务识别与执行。高频会增加 Chrome / CDP 负载。</p>
+              </div>
+              <select id="shotRate" class="input" aria-label="截图频率">
+                <option value="2000">2 秒 1 张</option>
+                <option value="1000">1 秒 1 张</option>
+                <option value="333">1 秒 3 张</option>
+                <option value="200">1 秒 5 张</option>
+              </select>
+            </div>
+
+            <div class="setting-row maa-update-row" id="maaUpdateRow">
+              <div class="setting-copy">
+                <b>MAA 版本</b>
+                <p>当前 <span id="maaVersion">—</span> · 最新 <span id="maaLatest">—</span><br><span id="maaUpdateMsg">—</span></p>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-light btn-sm" id="maaCheck" type="button">检查更新</button>
+                <button class="btn btn-control btn-sm" id="maaUpdate" type="button">更新 Maa</button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-copy">
+                <b>当前登录</b>
+                <p id="loginSummary">—</p>
+              </div>
+              <button class="btn btn-text btn-sm" id="settingsLogout" type="button">退出登录</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <header class="panel-head">
+              <span class="bar" aria-hidden="true"></span>
+              <h2>Access <em>访问</em></h2>
+              <span class="code">SYS-02</span>
+            </header>
+
+            <div class="setting-row" id="tokenSetting">
+              <div class="setting-copy">
+                <b>访问 token</b>
+                <p>默认关闭。开启后可在 URL 带 <code>?token=…</code> 作为后备访问方式。</p>
+              </div>
+              <label class="switch">
+                <input id="authChk" type="checkbox" aria-label="启用访问 token">
+                <span class="track" aria-hidden="true"><span class="knob"></span></span>
+              </label>
+            </div>
+
+            <div class="token-row" id="tokenRow">
+              <span class="micro">TOKEN</span>
+              <code id="tokenText">—</code>
+              <button class="btn-icon sm" id="tokenCopy" type="button" aria-label="复制 token" title="复制 token">
+                <svg class="icon icon-sm" aria-hidden="true"><use href="#i-copy"/></svg>
+              </button>
+              <button class="btn btn-text btn-xs" id="tokenRotate" type="button">轮换</button>
+            </div>
+
+            <div class="setting-actions">
+              <button class="btn btn-control btn-sm" id="openPassword" type="button">修改密码</button>
+              <button class="btn btn-light btn-sm" id="openAccounts" type="button">账号管理</button>
+            </div>
+
+            <div class="alert" id="securityNote">
+              <svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>
+              <div>
+                <b>公网暴露提示</b>
+                <p>面板拥有启停权限。建议在云安全组限制来源 IP。接管画面已经通过面板端口代理，无需额外放行 6080。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <span>// ENDFIELD CLOUD OPS</span>
+        <span>NODE <b id="footNode">127.0.0.1</b></span>
+        <span>MAAEND <b id="maaFoot">v2.35.0</b></span>
+        <span>PROTOCOL <b>09</b></span>
+        <span class="spacer"></span>
+        <span class="regmarks" aria-hidden="true"><i class="c"></i><i class="m"></i><i class="y"></i></span>
+        <span class="tech" id="footClock">--:--:--</span>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<!-- mobile full-screen menu -->
+<div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="站点菜单" hidden>
+  <div class="mm-top">
+    <img class="brand-logo" src="/static/assets/logo.svg" alt="明日方舟：终末地">
+    <button class="btn-icon sm" id="mmClose" type="button" aria-label="关闭菜单">
+      <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+    </button>
+  </div>
+  <nav class="mm-nav" aria-label="主导航">
+    <a class="mm-item" href="#live" data-section="live"><svg class="icon" aria-hidden="true"><use href="#i-console"/></svg><span>控制台</span></a>
+    <a class="mm-item" href="#library" data-section="library"><svg class="icon" aria-hidden="true"><use href="#i-tasks"/></svg><span>任务库</span></a>
+    <a class="mm-item" href="#log" data-section="log"><svg class="icon" aria-hidden="true"><use href="#i-log"/></svg><span>运行日志</span></a>
+    <a class="mm-item" href="#settings" data-section="settings"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg><span>系统设置</span></a>
+  </nav>
+  <div class="mm-tools">
+    <button class="btn btn-light btn-sm" id="mmTheme" type="button">切换明暗</button>
+  </div>
+  <div class="mm-foot">
+    <div class="micro"><span>NODE</span><span id="mmNode">127.0.0.1</span></div>
+    <div class="micro"><span>STACK</span><span id="maaMobile">MAAEND v2.35.0</span></div>
+    <button class="btn btn-text btn-sm" id="mmLogout" type="button">退出登录</button>
+  </div>
+  <span class="mm-ghost" aria-hidden="true">EF</span>
+</div>
+
+<!-- fullscreen screenshot -->
+<div class="modal modal-lg modal-shot" id="shotModal" hidden>
+  <div class="modal-scrim" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-label="实时画面全屏">
+    <div class="modal-band">
+      <span class="bar" aria-hidden="true"></span>
+      <h2>Live Feed / Fullscreen</h2>
+      <button class="modal-close" type="button" data-close aria-label="关闭">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body"><img id="modalShot" alt="云·终末地全屏画面"></div>
+  </div>
+</div>
+
+<!-- confirm -->
+<div class="modal modal-sm" id="confirmModal" hidden>
+  <div class="modal-scrim" data-close></div>
+  <div class="modal-panel" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmText">
+    <div class="modal-band">
+      <span class="bar" aria-hidden="true"></span>
+      <h2 id="confirmBandTitle">Confirm Action</h2>
+      <button class="modal-close" type="button" data-close aria-label="关闭">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <h3 id="confirmTitle" style="margin:0 0 8px;font:700 20px/1.25 var(--font-sans)">确认操作？</h3>
+        <p id="confirmText" style="margin:0;font-size:12px;line-height:1.6;color:var(--ink-secondary)">—</p>
+        <p id="confirmNote" class="form-note" hidden></p>
+        <div class="modal-foot">
+          <button class="btn btn-light btn-sm" id="confirmCancel" type="button" autofocus>取消</button>
+          <button class="btn btn-danger btn-sm" id="confirmOk" type="button">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- takeover start progress -->
+<div class="modal modal-sm" id="takeoverModal" hidden>
+  <div class="modal-scrim"></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="takeoverTitle">
+    <div class="modal-band">
+      <span class="bar" aria-hidden="true"></span>
+      <h2 id="takeoverTitle">Manual Takeover</h2>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p class="status-line"><span class="status-tag run" id="takeoverTag">BOOT</span><span>MANUAL / VNC</span></p>
+        <p class="big-code" id="takeoverCode">00:00</p>
+        <p class="modal-lead" id="takeoverText">正在停止自动任务并准备 Chrome 与 VNC 画面…</p>
+        <div class="progress-mini" aria-hidden="true"><span></span></div>
+        <div class="modal-foot">
+          <button class="btn btn-light btn-sm" id="cancelTakeover" type="button">取消启动</button>
+          <button class="btn btn-control btn-sm" id="retryTakeover" type="button" hidden>重试</button>
+          <button class="btn btn-text btn-sm" id="closeTakeoverModal" type="button" hidden>关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- schedule -->
+<div class="modal" id="scheduleModal" hidden>
+  <div class="modal-scrim" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="scheduleTitle">
+    <div class="modal-band">
+      <span class="bar" aria-hidden="true"></span>
+      <h2 id="scheduleTitle">Auto Start / 定时</h2>
+      <button class="modal-close" type="button" data-close aria-label="关闭">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p class="modal-lead">服务器本地时间。保存后会写入 <code>maa</code> 用户 crontab，按时间点执行全套日常。</p>
+        <div class="setting-row" style="padding:0 0 12px">
+          <div class="setting-copy"><b>启用定时</b><p>关闭后保留时间点，但不会自动运行。</p></div>
+          <label class="switch">
+            <input id="schedChk" type="checkbox" aria-label="启用定时自动启动">
+            <span class="track" aria-hidden="true"><span class="knob"></span></span>
+          </label>
+        </div>
+        <div id="schedTimes"></div>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-light btn-sm" id="addSchedTime" type="button">
+            <svg class="icon icon-sm" aria-hidden="true"><use href="#i-plus"/></svg>
+            <span>添加时间</span>
+          </button>
+        </div>
+        <div class="modal-foot" style="justify-content:space-between">
+          <span class="micro">NEXT RUN <b id="schedNextModal" class="tech" style="color:var(--ink)">—</b></span>
+          <span class="btn-row">
+            <button class="btn btn-light btn-sm" type="button" data-close>取消</button>
+            <button class="btn btn-control btn-sm" id="saveSched" type="button">保存定时</button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- game accounts -->
+<div class="modal" id="gameAccountsModal" hidden>
+  <div class="modal-scrim" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="gameAccountsTitle">
+    <div class="modal-band">
+      <span class="bar" aria-hidden="true"></span>
+      <h2 id="gameAccountsTitle">Game Accounts / 云账号</h2>
+      <button class="modal-close" type="button" data-close aria-label="关闭">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p class="modal-lead">每个账号使用独立的 Chrome 配置。切换 / 退出会停止当前任务并打开接管画面；新账号在云登录页扫码登录。</p>
+        <div class="account-list" id="gameAccountsList"></div>
+        <div class="field">
+          <label for="gameAccountInput">添加云账号</label>
+          <input class="input" id="gameAccountInput" placeholder="账号备注名（最多 24 字）" maxlength="24" autocomplete="off">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-control btn-sm" id="addGameAccount" type="button">添加并登录</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- panel users -->
+<div class="modal" id="accountsModal" hidden>
+  <div class="modal-scrim" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="accountsTitle">
+    <div class="modal-band">
+      <span class="bar" aria-hidden="true"></span>
+      <h2 id="accountsTitle">Accounts / 面板账号</h2>
+      <button class="modal-close" type="button" data-close aria-label="关闭">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p class="modal-lead">管理员可以添加普通账号。普通账号可以操作任务，但不能管理账号或修改 token 设置。</p>
+        <div class="account-list" id="accountsList"></div>
+        <div class="field">
+          <label for="newUsername">用户名</label>
+          <input class="input" id="newUsername" placeholder="3-24 位字母数字 _ . -" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="newPassword">密码</label>
+          <input class="input" id="newPassword" type="password" placeholder="至少 8 位" autocomplete="new-password">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-control btn-sm" id="addAccount" type="button">添加账号</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- password -->
+<div class="modal modal-sm" id="passwordModal" hidden>
+  <div class="modal-scrim" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="passwordTitle">
+    <div class="modal-band">
+      <span class="bar" aria-hidden="true"></span>
+      <h2 id="passwordTitle">Security / 修改密码</h2>
+      <button class="modal-close" type="button" data-close aria-label="关闭">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <div class="field">
+          <label for="oldPassword">当前密码</label>
+          <input class="input" id="oldPassword" type="password" autocomplete="current-password">
+        </div>
+        <div class="field">
+          <label for="newPassword1">新密码</label>
+          <input class="input" id="newPassword1" type="password" placeholder="至少 8 位" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label for="newPassword2">确认新密码</label>
+          <input class="input" id="newPassword2" type="password" placeholder="再次输入" autocomplete="new-password">
+        </div>
+        <p class="err" id="passwordErr"></p>
+        <div class="form-actions">
+          <button class="btn btn-light btn-sm" type="button" data-close>取消</button>
+          <button class="btn btn-control btn-sm" id="changePassword" type="button">修改密码</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- task options (MXU optionValues) -->
+<div class="modal modal-lg" id="taskOptionsModal" hidden>
+  <div class="modal-scrim" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="taskOptionsTitle">
+    <div class="modal-band">
+      <span class="bar" aria-hidden="true"></span>
+      <h2 id="taskOptionsTitle">Task Options / 任务设置</h2>
+      <button class="modal-close" type="button" data-close aria-label="关闭">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p class="modal-lead" id="taskOptionsDesc"></p>
+        <div id="taskOptionsForm"></div>
+        <div class="modal-foot">
+          <span class="micro" style="margin-right:auto">与 MXU 使用同一份 optionValues</span>
+          <button class="btn btn-light btn-sm" type="button" data-close>取消</button>
+          <button class="btn btn-control btn-sm" id="saveTaskOptions" type="button">保存设置</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Maa updater -->
+<div class="modal" id="maaUpdateModal" hidden>
+  <div class="modal-scrim" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="maaUpdateTitle">
+    <div class="modal-band">
+      <span class="bar" aria-hidden="true"></span>
+      <h2 id="maaUpdateTitle">Maa Update / 更新</h2>
+      <button class="modal-close" type="button" data-close aria-label="关闭">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p class="modal-lead" id="maaUpdateStatus">等待中…</p>
+        <pre class="maa-update-log" id="maaUpdateLog">—</pre>
+        <div class="modal-foot">
+          <button class="btn btn-light btn-sm" type="button" data-close>关闭</button>
+          <button class="btn btn-control btn-sm" id="maaUpdateReload" type="button" hidden>刷新面板</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="net-alert" id="netAlert" hidden>
+  <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+  <span id="netAlertText">与面板的连接中断</span>
+  <button id="netRetry" type="button">重试</button>
+</div>
+
+<noscript><div style="padding:24px">需要启用 JavaScript 才能使用控制台。</div></noscript>
+<script src="/static/app.js?v=20261024l"></script>
+</body>
+</html>

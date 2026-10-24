@@ -1,0 +1,37 @@
+# runtime state / secrets
+panel/tasks.json
+panel/progress.json
+panel/schedule.json
+panel/auth.conf
+panel/users.json
+panel/game-accounts.json
+panel/active-profile
+panel/admin-credentials.txt
+panel/token
+panel/vnc-token
+panel/shot.jpg
+panel/raw.png
+panel/novnc/
+panel/config/
+github.token
+*.token
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# logs / local backups
+*.log
+*.bak
+*.bak-*
+*.bak2-*
+*.bak3-*
+*.bak-*
+
+# editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,179 @@
+{
+    "instances":  [
+                      {
+                          "id":  "webcloud-full",
+                          "name":  "网页云·全套日常",
+                          "controllerName":  "Linux-Wlroots",
+                          "resourceName":  "官服-网页端",
+                          "tasks":  [
+                                        {
+                                            "taskName":  "WebStartGame",
+                                            "enabled":  true,
+                                            "optionValues":  {
+
+                                                             }
+                                        },
+                                        {
+                                            "taskName":  "VisitFriends",
+                                            "enabled":  true,
+                                            "optionValues":  {
+                                                                 "ProductionAssistControl":  {
+                                                                                                 "type":  "checkbox",
+                                                                                                 "caseNames":  [
+                                                                                                                   "ProductionAssistControlNexus",
+                                                                                                                   "ProductionAssistMFGCabin",
+                                                                                                                   "ProductionAssistGrowthChamber"
+                                                                                                               ]
+                                                                                             }
+                                                             }
+                                        },
+                                        {
+                                            "taskName":  "DijiangRewards",
+                                            "enabled":  true,
+                                            "optionValues":  {
+                                                                 "SelectToGrow":  {
+                                                                                      "type":  "select",
+                                                                                      "caseName":  "DoNothing"
+                                                                                  },
+                                                                 "AutoStartExchange":  {
+                                                                                           "type":  "switch",
+                                                                                           "value":  true
+                                                                                       },
+                                                                 "StageTaskSetting":  {
+                                                                                          "type":  "switch",
+                                                                                          "value":  false
+                                                                                      }
+                                                             }
+                                        },
+                                        {
+                                            "taskName":  "CreditShoppingN2",
+                                            "enabled":  true,
+                                            "optionValues":  {
+                                                                 "CreditShoppingReserve":  {
+                                                                                               "type":  "input",
+                                                                                               "values":  {
+                                                                                                              "ReserveCreditThreshold":  "300"
+                                                                                                          }
+                                                                                           },
+                                                                 "CreditShoppingClueSend":  {
+                                                                                                "type":  "input",
+                                                                                                "values":  {
+                                                                                                               "MaxClueSendWhenInsufficient":  "1"
+                                                                                                           }
+                                                                                            },
+                                                                 "CreditShoppingQuickGiveDuplicateClues":  {
+                                                                                                               "type":  "switch",
+                                                                                                               "value":  true
+                                                                                                           },
+                                                                 "CreditShoppingClueStockLimit":  {
+                                                                                                      "type":  "select",
+                                                                                                      "caseName":  "2"
+                                                                                                  },
+                                                                 "CreditShoppingPriority1":  {
+                                                                                                 "type":  "switch",
+                                                                                                 "value":  true
+                                                                                             },
+                                                                 "CreditShoppingPriority2":  {
+                                                                                                 "type":  "switch",
+                                                                                                 "value":  true
+                                                                                             },
+                                                                 "CreditShoppingPriority3":  {
+                                                                                                 "type":  "switch",
+                                                                                                 "value":  false
+                                                                                             },
+                                                                 "CreditShoppingForce":  {
+                                                                                             "type":  "select",
+                                                                                             "caseName":  "Exit"
+                                                                                         },
+                                                                 "CreditShoppingKeepShelfRecord":  {
+                                                                                                       "type":  "switch",
+                                                                                                       "value":  true
+                                                                                                   }
+                                                             }
+                                        },
+                                        {
+                                            "taskName":  "DeliveryJobs",
+                                            "enabled":  true,
+                                            "optionValues":  {
+                                                                 "ValleyIV":  {
+                                                                                  "type":  "switch",
+                                                                                  "value":  true
+                                                                              },
+                                                                 "Wuling":  {
+                                                                                "type":  "switch",
+                                                                                "value":  true
+                                                                            }
+                                                             }
+                                        },
+                                        {
+                                            "taskName":  "SellProduct",
+                                            "enabled":  true,
+                                            "optionValues":  {
+
+                                                             }
+                                        },
+                                        {
+                                            "taskName":  "AutoStockpile",
+                                            "enabled":  true,
+                                            "optionValues":  {
+
+                                                             }
+                                        },
+                                        {
+                                            "taskName":  "AutoStockStaple",
+                                            "enabled":  true,
+                                            "optionValues":  {
+
+                                                             }
+                                        },
+                                        {
+                                            "taskName":  "GearAssembly",
+                                            "enabled":  true,
+                                            "optionValues":  {
+                                                                 "GearAssemblyType":  {
+                                                                                          "type":  "select",
+                                                                                          "caseName":  "SetGear"
+                                                                                      },
+                                                                 "GearAssemblySortOrder":  {
+                                                                                               "type":  "select",
+                                                                                               "caseName":  "Lower"
+                                                                                           }
+                                                             }
+                                        },
+                                        {
+                                            "taskName":  "WeaponUpgrade",
+                                            "enabled":  true,
+                                            "optionValues":  {
+
+                                                             }
+                                        },
+                                        {
+                                            "taskName":  "DailyRewards",
+                                            "enabled":  true,
+                                            "optionValues":  {
+                                                                 "DailyEmailRewards":  {
+                                                                                           "type":  "switch",
+                                                                                           "value":  true
+                                                                                       },
+                                                                 "DailyEventRewards":  {
+                                                                                           "type":  "switch",
+                                                                                           "value":  true
+                                                                                       },
+                                                                 "DailyTaskRewards":  {
+                                                                                          "type":  "switch",
+                                                                                          "value":  true
+                                                                                      },
+                                                                 "DailyClaimDeliveryJobsRewards":  {
+                                                                                                       "type":  "switch",
+                                                                                                       "value":  true
+                                                                                                   },
+                                                                 "DailyProtocolPassRewards":  {
+                                                                                                  "type":  "switch",
+                                                                                                  "value":  true
+                                                                                              }
+                                                             }
+                                        }
+                                    ]
+                      }
+                  ]
+}

@@ -1,0 +1,114 @@
+﻿<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENDFIELD // SIGN IN</title>
+<meta name="description" content="云·终末地 · MaaEnd 自动作业控制台登录">
+<script>
+  try {
+    var q = new URLSearchParams(location.search).get('theme');
+    var t = q || localStorage.getItem('ef-theme') || 'light';
+    document.documentElement.dataset.theme = (t === 'dark' ? 'dark' : 'light');
+  } catch (e) {}
+</script>
+<link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
+<link rel="stylesheet" href="/static/style.css?v=20261024l">
+</head>
+<body class="auth-body">
+<main class="auth">
+  <section class="auth-paper">
+    <div class="auth-brand">
+      <img class="brand-logo" src="/static/assets/logo.svg" alt="明日方舟：终末地">
+    </div>
+
+    <div class="auth-copy">
+      <p class="breadcrumb">// ACCESS / SIGN IN</p>
+      <p class="meta-line">// ENDFIELD CLOUD OPS　NODE <b data-node>127.0.0.1</b></p>
+      <h1>Sign In<em>控制台登录</em></h1>
+      <p class="auth-lead">使用面板账号登录。普通账号可以操作任务，管理员可以管理账号、定时与访问 token。</p>
+
+      <form class="auth-form" id="form" autocomplete="on">
+        <div class="field">
+          <label for="username">用户名</label>
+          <span class="input-wrap">
+            <input class="input" id="username" name="username" spellcheck="false" autocomplete="username" autofocus placeholder="用户名">
+          </span>
+        </div>
+        <div class="field">
+          <label for="password">密码</label>
+          <span class="input-wrap">
+            <input class="input" id="password" name="password" type="password" autocomplete="current-password" placeholder="密码">
+          </span>
+        </div>
+        <button class="btn btn-action btn-lg" id="submit" type="submit">登录控制台</button>
+        <p class="auth-err" id="err" role="alert"></p>
+        <p class="auth-hint">如果这是首次部署、还没有任何账号，访问首页会进入「初始化管理员」页面。忘记密码可由服务器管理员重新创建账号文件。</p>
+      </form>
+
+      <div class="auth-foot">
+        <span>// ENDFIELD CLOUD OPS</span>
+        <span>SESSION AUTH</span>
+        <span>PROTOCOL 09</span>
+      </div>
+    </div>
+    <span class="auth-ghost" aria-hidden="true">// ACCESS</span>
+  </section>
+
+  <aside class="auth-band" aria-label="节点信息">
+    <div class="auth-band-top">
+      <span class="auth-band-mark" aria-hidden="true"></span>
+      <span>NODE / <b data-node>127.0.0.1</b></span>
+    </div>
+    <div class="auth-band-middle">
+      <div class="auth-band-word">Cloud<br>Ops</div>
+      <p class="auth-band-sub">云·终末地自动作业控制台。实时画面、日常调度、日志与手动接管，都在同一个节点上。</p>
+      <div class="auth-band-meta">
+        <span>TERMINAL / 1706×960</span>
+        <span>STACK / MAAEND v2.35.0</span>
+        <span>REGION / CN-HUAWEI</span>
+      </div>
+    </div>
+    <div class="auth-band-bottom">
+      <span>ENDFIELD CLOUD OPERATIONS</span>
+      <b>PROTOCOL 09</b>
+    </div>
+  </aside>
+</main>
+
+<script>
+  (() => {
+    const host = location.host || '127.0.0.1:8787';
+    document.querySelectorAll('[data-node]').forEach((el) => { el.textContent = host; });
+    const form = document.getElementById('form');
+    const err = document.getElementById('err');
+    const submit = document.getElementById('submit');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.textContent = '';
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      if (!username || !password) { err.textContent = '请输入用户名和密码'; return; }
+      submit.disabled = true;
+      submit.textContent = '正在登录…';
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 409) { location.replace('/'); return; }
+        if (!response.ok || !data.ok) throw new Error(data.msg || ('HTTP ' + response.status));
+        location.replace('/');
+      } catch (ex) {
+        err.textContent = ex.message || '登录失败';
+        submit.disabled = false;
+        submit.textContent = '登录控制台';
+      }
+    });
+  })();
+</script>
+</body>
+</html>
+

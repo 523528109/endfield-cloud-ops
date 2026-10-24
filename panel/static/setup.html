@@ -1,0 +1,122 @@
+﻿<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENDFIELD // INITIALIZE</title>
+<meta name="description" content="云·终末地 · MaaEnd 自动作业控制台初始化">
+<script>
+  try {
+    var q = new URLSearchParams(location.search).get('theme');
+    var t = q || localStorage.getItem('ef-theme') || 'light';
+    document.documentElement.dataset.theme = (t === 'dark' ? 'dark' : 'light');
+  } catch (e) {}
+</script>
+<link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
+<link rel="stylesheet" href="/static/style.css?v=20261024l">
+</head>
+<body class="auth-body">
+<main class="auth">
+  <section class="auth-paper">
+    <div class="auth-brand">
+      <img class="brand-logo" src="/static/assets/logo.svg" alt="明日方舟：终末地">
+    </div>
+
+    <div class="auth-copy">
+      <p class="breadcrumb">// ACCESS / INITIALIZE</p>
+      <p class="meta-line">// FIRST RUN　NODE <b data-node>127.0.0.1</b></p>
+      <h1>Initialize<em>创建管理员账号</em></h1>
+      <p class="auth-lead">这是第一次启动面板。创建管理员后，所有 API 都需要登录或访问 token；之后可以在「系统设置 → 账号管理」里添加普通账号。</p>
+
+      <form class="auth-form" id="form" autocomplete="off">
+        <div class="field">
+          <label for="username">管理员用户名</label>
+          <span class="input-wrap">
+            <input class="input" id="username" name="username" spellcheck="false" autocomplete="username" autofocus placeholder="3-24 位字母数字 _ . -">
+          </span>
+        </div>
+        <div class="field">
+          <label for="password">密码</label>
+          <span class="input-wrap">
+            <input class="input" id="password" name="password" type="password" autocomplete="new-password" placeholder="至少 8 位">
+          </span>
+        </div>
+        <div class="field">
+          <label for="confirm">确认密码</label>
+          <span class="input-wrap">
+            <input class="input" id="confirm" name="confirm" type="password" autocomplete="new-password" placeholder="再次输入">
+          </span>
+        </div>
+        <button class="btn btn-action btn-lg" id="submit" type="submit">创建管理员并登录</button>
+        <p class="auth-err" id="err" role="alert"></p>
+        <p class="auth-hint">密码使用 PBKDF2-HMAC-SHA256 加盐存储，不会保存明文。请妥善保管。</p>
+      </form>
+
+      <div class="auth-foot">
+        <span>// ENDFIELD CLOUD OPS</span>
+        <span>FIRST RUN</span>
+        <span>PROTOCOL 09</span>
+      </div>
+    </div>
+    <span class="auth-ghost" aria-hidden="true">// INIT</span>
+  </section>
+
+  <aside class="auth-band" aria-label="初始化说明">
+    <div class="auth-band-top">
+      <span class="auth-band-mark" aria-hidden="true"></span>
+      <span>NODE / <b data-node>127.0.0.1</b></span>
+    </div>
+    <div class="auth-band-middle">
+      <div class="auth-band-word">First<br>Run</div>
+      <p class="auth-band-sub">创建管理员是唯一一次无鉴权写入。完成后，面板会立即要求登录，并关闭所有匿名 API。</p>
+      <div class="auth-band-meta">
+        <span>AUTH / PBKDF2 260K</span>
+        <span>SESSION / 7 DAYS</span>
+        <span>TOKEN / OPTIONAL</span>
+      </div>
+    </div>
+    <div class="auth-band-bottom">
+      <span>ENDFIELD CLOUD OPERATIONS</span>
+      <b>PROTOCOL 09</b>
+    </div>
+  </aside>
+</main>
+
+<script>
+  (() => {
+    const host = location.host || '127.0.0.1:8787';
+    document.querySelectorAll('[data-node]').forEach((el) => { el.textContent = host; });
+    const form = document.getElementById('form');
+    const err = document.getElementById('err');
+    const submit = document.getElementById('submit');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.textContent = '';
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm').value;
+      if (!/^[A-Za-z0-9_.-]{3,24}$/.test(username)) { err.textContent = '用户名 3-24 位，仅字母数字 _ . -'; return; }
+      if (password.length < 8) { err.textContent = '密码至少 8 位'; return; }
+      if (password !== confirm) { err.textContent = '两次密码不一致'; return; }
+      submit.disabled = true;
+      submit.textContent = '正在创建…';
+      try {
+        const response = await fetch('/api/setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) throw new Error(data.msg || ('HTTP ' + response.status));
+        location.replace('/');
+      } catch (ex) {
+        err.textContent = ex.message || '初始化失败';
+        submit.disabled = false;
+        submit.textContent = '创建管理员并登录';
+      }
+    });
+  })();
+</script>
+</body>
+</html>
+
