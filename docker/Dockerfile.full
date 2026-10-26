@@ -54,7 +54,8 @@ RUN python3 -m venv /home/maa/venv \
 
 # Default MXU config + generated catalog.
 COPY deploy/mxu-MaaEnd.example.json /home/maa/maaend/config/mxu-MaaEnd.json
-RUN ln -sfn /home/maa/maaend-web/web /home/maa/maaend/web \
+RUN rm -rf /home/maa/maaend/web \
+    && ln -s /home/maa/maaend-web/web /home/maa/maaend/web \
     && mkdir -p /home/maa/data /home/maa/.config /run/user/1000 \
     && MAAEND_ROOT=/home/maa/maaend \
        MAAEND_WEBUI_DIR=/home/maa/maaend-webui \
