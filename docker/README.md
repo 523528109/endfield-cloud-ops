@@ -23,6 +23,13 @@ docker run -d --name endfield-cloud-ops \
 
 镜像内已经包含 MaaEnd 和 Python venv，直接打开 `/setup` 初始化即可。
 
+如需让 MaaEnd 的更新在容器重建后保留，可以额外挂载两个命名卷（首次会从镜像内容初始化）：
+
+```bash
+-v endfield-maaend:/home/maa/maaend \
+-v endfield-venv:/home/maa/venv
+```
+
 ## 面板运行时镜像
 
 包含：

@@ -144,6 +144,10 @@ docker run -d --name endfield-cloud-ops \
 镜像内已经包含 MaaEnd 和 Python venv，启动后直接打开 `/setup` 创建管理员即可。  
 项目**不提供默认账号或默认密码**。
 
+如需让 MaaEnd 更新在容器重建后保留，可额外挂载
+`-v endfield-maaend:/home/maa/maaend -v endfield-venv:/home/maa/venv`
+（首次会从镜像内容初始化）。
+
 ### 面板运行时镜像
 
 适合已经有一套 MaaEnd 的机器，只替换前端/控制层：

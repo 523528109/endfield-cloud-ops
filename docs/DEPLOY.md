@@ -169,6 +169,15 @@ docker run -d --name endfield-cloud-ops \
   xl233/endfield-cloud-ops:full
 ```
 
+如需让 MaaEnd 更新在容器重建后保留，额外挂载：
+
+```bash
+-v endfield-maaend:/home/maa/maaend \
+-v endfield-venv:/home/maa/venv
+```
+
+首次会自动从镜像内容初始化这两个卷。
+
 **只替换面板（已有 MaaEnd）**：
 
 ```bash
