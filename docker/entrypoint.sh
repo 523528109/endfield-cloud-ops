@@ -34,4 +34,4 @@ fi
 # The schedule feature writes to the maa user's crontab.
 cron 2>/dev/null || true
 
-exec gosu maa /usr/bin/python3 /home/maa/maaend-webui/webui.py
+exec gosu maa "${MAAEND_PANEL_PYTHON:-/usr/bin/python3}" /home/maa/maaend-webui/webui.py

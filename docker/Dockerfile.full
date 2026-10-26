@@ -11,6 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MAAEND_ROOT=/home/maa/maaend \
     MAAEND_DATA_DIR=/home/maa/data \
     MAAEND_CHROME=/usr/bin/google-chrome \
+    MAAEND_PANEL_PYTHON=/home/maa/venv/bin/python \
     PYTHONUNBUFFERED=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
