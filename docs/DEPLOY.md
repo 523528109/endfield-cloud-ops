@@ -31,7 +31,8 @@ sudo apt install -y \
   git curl unzip \
   sway swaybg \
   websockify wayvnc \
-  fonts-noto-cjk
+  fonts-noto-cjk \
+  tesseract-ocr tesseract-ocr-chi-sim
 ```
 
 安装 Google Chrome（MaaEnd 的网页端控制需要 Chromium 的 CDP；脚本默认 `/usr/bin/google-chrome`）：

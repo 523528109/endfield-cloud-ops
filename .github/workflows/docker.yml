@@ -43,6 +43,7 @@ jobs:
 
       - name: Smoke test
         run: |
+          docker run --rm --entrypoint /bin/bash xl233/endfield-cloud-ops:latest -lc 'tesseract --list-langs 2>/dev/null | grep -qx chi_sim'
           docker run -d --name endfield-smoke -p 8787:8787 xl233/endfield-cloud-ops:latest
           ok=0
           for i in $(seq 1 30); do
@@ -86,7 +87,7 @@ jobs:
 
       - name: Smoke test full image
         run: |
-          docker run --rm --entrypoint /bin/bash xl233/endfield-cloud-ops:full -lc 'test -x /home/maa/maaend/MaaEnd && /home/maa/venv/bin/python -c "import maa; print(maa.__file__)"'
+          docker run --rm --entrypoint /bin/bash xl233/endfield-cloud-ops:full -lc 'test -x /home/maa/maaend/MaaEnd && /home/maa/venv/bin/python -c "import maa; print(maa.__file__)" && tesseract --list-langs 2>/dev/null | grep -qx chi_sim'
           docker run -d --name endfield-full-smoke -p 8788:8787 xl233/endfield-cloud-ops:full
           ok=0
           for i in $(seq 1 45); do

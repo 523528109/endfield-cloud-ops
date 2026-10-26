@@ -87,6 +87,7 @@ http://<SERVER_IP>:8787/setup
 ### 说明
 
 - 容器内自带 Chrome + headless sway，任务和实时画面都在容器内运行。
+- 镜像内置 Tesseract 中文语言包，实时画面下方可显示截图识别的免费 / 付费剩余时长。
 - 接管画面通过面板 `/vnc/*` 反代，不需要额外映射 6080。
 - 定时任务由容器内 cron 执行；需要容器以 root 启动（默认 entrypoint 会降权到 `maa` 运行面板）。
 - 如果 Chrome 启动失败，先看：

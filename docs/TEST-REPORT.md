@@ -54,3 +54,11 @@
 - 真实启动 QuickDaily 后停止，runner 成功写入独立的 history 文件；测试记录已清理。
 - 新历史目录：`/home/maa/maaend-webui/history`（Docker 使用 `/home/maa/data/history`）。
 
+## 云游戏时长 OCR（2026-10-27）
+
+- `/api/cloud-time` 取 `/api/shot` 的最新帧，裁剪右侧时长卡片，灰度 + 3 倍放大 + 自动对比度后交给 Tesseract `chi_sim+eng --psm 11`。
+- 全尺寸 2511×1247 和面板 1280×636 截图都识别出 `付费时长 0分钟`、`免费时长 0分钟`；API 返回 `paid_minutes=0`、`free_minutes=0`。
+- 首次识别约 2 秒，10 秒缓存命中约 0.007 秒；页面下方显示为 `免 0m · 付 0m`，桌面与 390px 移动端布局均无横向溢出。
+- Chrome 未启动、页面没有时长卡片或未安装 Tesseract 时返回 `ok=false`，面板显示 `--`，不影响任务运行。
+- Docker `latest` 和 `full` 镜像都安装 `tesseract-ocr` + `tesseract-ocr-chi-sim`，CI smoke test 会检查 `chi_sim` 语言包。
+

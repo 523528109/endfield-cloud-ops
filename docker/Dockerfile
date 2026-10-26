@@ -13,7 +13,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates curl git python3 python3-pip \
         sway swaybg wayvnc websockify gosu cron procps \
-        fonts-noto-cjk \
+        fonts-noto-cjk tesseract-ocr tesseract-ocr-chi-sim \
     && rm -rf /var/lib/apt/lists/*
 
 # Chrome is required by the MaaEnd web runner.

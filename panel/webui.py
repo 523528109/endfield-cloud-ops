@@ -2,7 +2,8 @@
 """MaaEnd cloud-Endfield web console.
 
 Serves a static Endfield-style dashboard and a small JSON API.
-No third-party web framework; only websocket-client + Pillow for live screenshots.
+No third-party web framework; websocket-client + Pillow for live screenshots and
+the Tesseract CLI (optional) for cloud-time OCR.
 """
 import base64
 import glob
@@ -17,6 +18,7 @@ import secrets
 import shutil
 import socket
 import subprocess
+import tempfile
 import threading
 import time
 import urllib.request
@@ -25,7 +27,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
 import websocket
-from PIL import Image
+from PIL import Image, ImageOps
 
 BASE = os.environ.get("MAAEND_HOME", "/home/maa")
 ROOT = os.environ.get("MAAEND_ROOT", BASE + "/maaend")
@@ -1181,6 +1183,111 @@ def screenshot():
         _lock.release()
 
 
+_CLOUD_TIME_CACHE = {"ts": 0.0, "data": None}
+_CLOUD_TIME_LOCK = threading.Lock()
+_CLOUD_TIME_TTL = 10
+# The right-hand cloud card is stable across the supported viewport sizes.
+# Cropping it keeps the OCR input small and avoids the rest of the page.
+_CLOUD_CARD = (0.67, 0.57, 0.97, 0.78)
+
+
+def _cloud_duration(text, label):
+    """Return (minutes, matched text) for one 付费/免费 duration row."""
+    compact = re.sub(r"\s+", "", text or "")
+    pos = compact.find(label)
+    if pos < 0:
+        return None, ""
+    tail = compact[pos + len(label):pos + len(label) + 48]
+    for other in ("付费", "免费"):
+        if other == label:
+            continue
+        cut = tail.find(other)
+        if cut >= 0:
+            tail = tail[:cut]
+    m = re.search(r"(\d{1,5})(?:\.(\d))?\s*(小时|时|h)?\s*(\d{1,2})?\s*(分钟|分|min)?",
+                  tail, re.I)
+    if not m:
+        return None, ""
+    whole = int(m.group(1))
+    unit = (m.group(3) or "").lower()
+    tail_minutes = int(m.group(4)) if m.group(4) else 0
+    if unit in ("小时", "时", "h"):
+        minutes = whole * 60 + tail_minutes
+        if m.group(2):
+            minutes += round(int(m.group(2)) / 10 * 60)
+    else:
+        minutes = whole
+    return minutes, m.group(0)
+
+
+def cloud_time_payload(force=False):
+    """OCR the paid/free remaining time from the latest cloud-page frame."""
+    now = time.time()
+    with _CLOUD_TIME_LOCK:
+        cached = _CLOUD_TIME_CACHE.get("data")
+        if cached and not force and now - _CLOUD_TIME_CACHE.get("ts", 0) < _CLOUD_TIME_TTL:
+            return cached
+        if not chrome_running():
+            payload = {"ok": False, "reason": "offline", "updated": int(now)}
+            _CLOUD_TIME_CACHE.update(ts=now, data=payload)
+            return payload
+        if not shutil.which("tesseract"):
+            payload = {"ok": False, "reason": "ocr_unavailable", "updated": int(now)}
+            _CLOUD_TIME_CACHE.update(ts=now, data=payload)
+            return payload
+        data = screenshot()
+        if not data:
+            payload = {"ok": False, "reason": "offline", "updated": int(now)}
+            _CLOUD_TIME_CACHE.update(ts=now, data=payload)
+            return payload
+        path = None
+        try:
+            im = Image.open(io.BytesIO(data)).convert("RGB")
+            w, h = im.size
+            card = im.crop((int(w * _CLOUD_CARD[0]), int(h * _CLOUD_CARD[1]),
+                            int(w * _CLOUD_CARD[2]), int(h * _CLOUD_CARD[3])))
+            if card.width < 80 or card.height < 30:
+                raise ValueError("cloud card crop is too small")
+            gray = ImageOps.grayscale(card)
+            gray = gray.resize((gray.width * 3, gray.height * 3), Image.LANCZOS)
+            gray = ImageOps.autocontrast(gray)
+            fd, path = tempfile.mkstemp(prefix="maaend-cloud-", suffix=".png")
+            os.close(fd)
+            gray.save(path, "PNG")
+            proc = subprocess.run(
+                ["tesseract", path, "stdout", "-l", "chi_sim+eng", "--psm", "11"],
+                capture_output=True, text=True, timeout=20)
+            text = (proc.stdout or "").strip()
+            paid, paid_matched = _cloud_duration(text, "付费")
+            free, free_matched = _cloud_duration(text, "免费")
+            ok = paid is not None or free is not None
+            payload = {
+                "ok": ok,
+                "paid_minutes": paid,
+                "free_minutes": free,
+                "paid": paid_matched,
+                "free": free_matched,
+                "updated": int(now),
+                "engine": "tesseract",
+            }
+            if not ok:
+                payload["reason"] = "not_found"
+                payload["raw"] = text[:300]
+            _CLOUD_TIME_CACHE.update(ts=now, data=payload)
+            return payload
+        except Exception as exc:
+            payload = {"ok": False, "reason": "ocr_error", "updated": int(now),
+                       "detail": str(exc)[:160]}
+            _CLOUD_TIME_CACHE.update(ts=now, data=payload)
+            return payload
+        finally:
+            if path:
+                try:
+                    os.unlink(path)
+                except OSError:
+                    pass
+
+
 def start_daily(tasks="", instance=None, planned=None):
     if busy():
         return False, "already running"
@@ -1749,6 +1856,11 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(503, b"no screenshot")
                 return
             self._send(200, data, "image/jpeg")
+            return
+        if p == "/api/cloud-time":
+            force = (parse_qs(parsed.query).get("force") or ["0"])[0] in ("1", "true", "yes")
+            self._send(200, json.dumps(cloud_time_payload(force), ensure_ascii=False).encode(),
+                       "application/json", "no-store")
             return
         self._send(404, b"not found")
 

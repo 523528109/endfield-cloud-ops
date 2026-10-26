@@ -81,7 +81,8 @@
     apiOk: true,
     pollTimer: 0,
     shotTimer: 0,
-    memTimer: 0
+    memTimer: 0,
+    cloudTimer: 0
   };
 
   /* ---------------- helpers ---------------- */
@@ -2059,10 +2060,45 @@ body{display:grid;place-items:center}
     } catch (e) { /* keep last value */ }
   }
 
+  function fmtCloudMinutes(value) {
+    if (value == null || value === "" || !Number.isFinite(Number(value))) return "--";
+    const total = Math.max(0, Math.round(Number(value)));
+    if (total < 60) return total + "m";
+    const hours = Math.floor(total / 60);
+    const minutes = total % 60;
+    return minutes ? `${hours}h${pad(minutes)}m` : `${hours}h`;
+  }
+
+  async function refreshCloudTime() {
+    const el = $("cloudTime");
+    if (!el) return;
+    if (!state.status || !state.status.chrome) {
+      setText("cloudTime", "免 -- · 付 --");
+      el.title = "截图 OCR 识别剩余云游戏时长";
+      return;
+    }
+    try {
+      const data = await api("/api/cloud-time");
+      if (!data || !data.ok) {
+        setText("cloudTime", "免 -- · 付 --");
+        el.title = "暂未识别到时长（任务中或页面未显示）";
+        return;
+      }
+      const free = fmtCloudMinutes(data.free_minutes);
+      const paid = fmtCloudMinutes(data.paid_minutes);
+      setText("cloudTime", `免 ${free} · 付 ${paid}`);
+      el.title = `截图识别：免费 ${free} / 付费 ${paid}`;
+    } catch (e) {
+      setText("cloudTime", "免 -- · 付 --");
+      el.title = "时长识别失败";
+    }
+  }
+
   function startPolling() {
     clearInterval(state.pollTimer);
     clearInterval(state.memTimer);
     clearInterval(state.historyTimer);
+    clearInterval(state.cloudTimer);
     state.pollTimer = setInterval(() => {
       if (!document.hidden) refreshStatus(true);
     }, 2500);
@@ -2071,6 +2107,9 @@ body{display:grid;place-items:center}
     }, 1000);
     state.historyTimer = setInterval(() => {
       if (!document.hidden) loadHistory();
+    }, 30000);
+    state.cloudTimer = setInterval(() => {
+      if (!document.hidden) refreshCloudTime();
     }, 30000);
     scheduleShots();
   }
@@ -2240,6 +2279,7 @@ body{display:grid;place-items:center}
         loadHistory()
       ]);
       refreshShot();
+      refreshCloudTime();
       toast("已刷新");
     } finally {
       setTimeout(() => { btn.disabled = false; }, 400);
@@ -2266,6 +2306,7 @@ body{display:grid;place-items:center}
     await refreshStatus();
     startPolling();
     refreshShot();
+    refreshCloudTime();
   }
 
   if (document.readyState === "loading") {
