@@ -33,7 +33,7 @@ RUN userdel -r ubuntu 2>/dev/null || true \
 
 COPY panel/webui.py panel/gen_catalog.py /home/maa/maaend-webui/
 COPY panel/static/ /home/maa/maaend-webui/static/
-COPY panel/web/ /home/maa/maaend-web/
+COPY panel/web/ /home/maa/maaend-web/web/
 
 RUN git clone --depth 1 https://github.com/novnc/noVNC.git /home/maa/maaend-webui/novnc \
     && rm -rf /home/maa/maaend-webui/novnc/.git
