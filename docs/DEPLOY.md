@@ -316,7 +316,7 @@ sudo -u maa env MAAEND_ROOT=/home/maa/maaend \
   /home/maa/venv/bin/python web/linux/homesrv/apply_local_patches.py
 ```
 
-补丁只移除 `InMenuList` 里的颜色断言，保留两个 OCR 检查；修改前会备份 `resource/pipeline/nodes.json`。`auto_update.sh` 在 MaaEnd 升级后会自动执行一次。
+补丁会移除 `InMenuList` 里不适配当前云 UI 的颜色断言，并给「商店刷新用尽 / 送货设备冷却 / 据点上限 / 囤货限购」加上 `StopTask` 跳过节点；修改前会备份 `resource/pipeline/nodes.json`。`auto_update.sh` 在 MaaEnd 升级后会自动执行一次。
 
 ### 任务库 / 预设为空
 

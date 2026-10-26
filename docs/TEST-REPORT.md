@@ -68,5 +68,8 @@
 - 日志：`InMenuList` 的 `CheckMenuListColor` 只命中 `29` 个目标像素，配置要求 `100`；旧版成功截图为 `356`，说明当前云 UI 的黄色按钮变成描边样式，颜色判定不再适用。
 - 修复：在本地 `resource/pipeline/nodes.json` 的 `InMenuList.all_of` 中移除 `CheckMenuListColor`，保留 `CheckMenuListText` + `CheckMenuListText2` 两个 OCR 条件；修改前备份为 `backups/nodes.json.pre-menu-patch-*`。
 - 验证：快速日常实测 `VisitFriends` 成功（18.1s）、`DijiangRewards` 成功（51.1s）、`CreditShoppingN2` 成功（114.1s）；`SellProduct` 已进入据点交易界面，测试到该界面后手动停止，未继续等待。
-- 持久化：新增 `panel/web/linux/homesrv/apply_local_patches.py`，`auto_update.sh` 在 MaaEnd 更新后自动重复应用；脚本幂等，已应用时输出 `menu patch: not needed`。
+- 持久化：新增 `panel/web/linux/homesrv/apply_local_patches.py`，`auto_update.sh` 在 MaaEnd 更新后自动重复应用；脚本幂等，已应用时输出 `local patches: not needed`。
+- 追加游戏状态跳过：商店刷新用尽、送货设备冷却、据点发展值上限、囤货购买上限都会让 Maa 空转；补丁为这些状态增加 `StopTask` 节点，避免拖到云会话自动结束。
+- 实测：`VisitFriends` 18.7s OK、`DijiangRewards` 44.1s OK、`SellProduct` 67s OK（据点已满时跳过）、`AutoStockpile` 63s OK（购买次数 0/400 时跳过）。
+- 当前 `DailyFull` 预设临时移除 `CreditShoppingN2`、`DeliveryJobs`、`AutoStockStaple`，保留 10 项；这三项仍可从任务库单独运行，但当前账号状态下会受商店/冷却/限购影响。
 
