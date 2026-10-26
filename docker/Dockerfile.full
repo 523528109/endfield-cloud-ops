@@ -1,0 +1,74 @@
+# syntax=docker/dockerfile:1
+# All-in-one image: panel + MaaEnd + Python venv + Chrome/sway/noVNC.
+ARG MAAEND_VERSION=v2.35.0
+FROM ubuntu:24.04
+
+ARG MAAEND_VERSION
+ENV DEBIAN_FRONTEND=noninteractive \
+    HOME=/home/maa \
+    XDG_RUNTIME_DIR=/run/user/1000 \
+    MAAEND_HOME=/home/maa \
+    MAAEND_ROOT=/home/maa/maaend \
+    MAAEND_DATA_DIR=/home/maa/data \
+    MAAEND_CHROME=/usr/bin/google-chrome \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl git python3 python3-pip python3-venv \
+        sway swaybg wayvnc websockify gosu cron procps \
+        fonts-noto-cjk \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+        -o /tmp/google-chrome.deb \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends /tmp/google-chrome.deb \
+    && rm -f /tmp/google-chrome.deb \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN userdel -r ubuntu 2>/dev/null || true \
+    && groupdel ubuntu 2>/dev/null || true \
+    && groupadd -g 1000 maa \
+    && useradd -u 1000 -g maa -m -d /home/maa -s /bin/bash maa
+
+COPY panel/webui.py panel/gen_catalog.py /home/maa/maaend-webui/
+COPY panel/static/ /home/maa/maaend-webui/static/
+COPY panel/web/ /home/maa/maaend-web/
+
+RUN git clone --depth 1 https://github.com/novnc/noVNC.git /home/maa/maaend-webui/novnc \
+    && rm -rf /home/maa/maaend-webui/novnc/.git
+
+# MaaEnd release package (Linux x86_64).
+RUN set -eux; \
+    mkdir -p /home/maa/maaend; \
+    url="https://github.com/MaaEnd/MaaEnd/releases/download/${MAAEND_VERSION}/MaaEnd-linux-x86_64-${MAAEND_VERSION}.tar.gz"; \
+    (curl -fL --retry 3 --retry-delay 2 --max-time 1800 "$url" | tar xz -C /home/maa/maaend) \
+      || (curl -fL --retry 3 --retry-delay 2 --max-time 1800 "https://ghfast.top/$url" | tar xz -C /home/maa/maaend); \
+    test -f /home/maa/maaend/interface.json; \
+    test -f /home/maa/maaend/MaaEnd
+
+# Python binding used by run_daily_linux.py.
+RUN python3 -m venv /home/maa/venv \
+    && /home/maa/venv/bin/pip install --no-cache-dir \
+        "MaaFw==5.14.3" websocket-client Pillow
+
+# Default MXU config + generated catalog.
+COPY deploy/mxu-MaaEnd.example.json /home/maa/maaend/config/mxu-MaaEnd.json
+RUN ln -sfn /home/maa/maaend-web/web /home/maa/maaend/web \
+    && mkdir -p /home/maa/data /home/maa/.config /run/user/1000 \
+    && MAAEND_ROOT=/home/maa/maaend \
+       MAAEND_WEBUI_DIR=/home/maa/maaend-webui \
+       MAAEND_DATA_DIR=/home/maa/data \
+       /home/maa/venv/bin/python /home/maa/maaend-webui/gen_catalog.py \
+    && chown -R maa:maa /home/maa /run/user/1000
+
+COPY docker/entrypoint.sh /usr/local/bin/endfield-entrypoint
+RUN chmod 755 /usr/local/bin/endfield-entrypoint
+
+VOLUME ["/home/maa/.config", "/home/maa/data"]
+
+EXPOSE 8787
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -fsS http://127.0.0.1:8787/ >/dev/null || exit 1
+
+ENTRYPOINT ["/usr/local/bin/endfield-entrypoint"]

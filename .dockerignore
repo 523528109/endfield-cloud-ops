@@ -2,6 +2,7 @@
 .github
 docs
 deploy
+!deploy/mxu-MaaEnd.example.json
 LICENSE
 NOTICE.md
 README.md

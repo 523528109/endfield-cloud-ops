@@ -122,9 +122,31 @@ sudo systemctl enable --now maaend-webui
 
 ## Docker
 
-镜像：`xl233/endfield-cloud-ops:latest`
+提供两个镜像：
 
-该镜像包含面板、Chrome、headless sway、wayvnc、websockify、noVNC 和 cron；**不包含 MaaEnd 本体/venv**，运行时挂载现有 MaaEnd：
+| 标签 | 内容 | 用途 |
+| --- | --- | --- |
+| `xl233/endfield-cloud-ops:latest` | 面板 + Chrome + sway + noVNC | 需要挂载现有 MaaEnd/venv |
+| `xl233/endfield-cloud-ops:full` | 面板 + **MaaEnd v2.35.0** + MaaFw venv + Chrome + sway + noVNC | 一体化，无需挂载 MaaEnd |
+
+### 一体化镜像（推荐）
+
+```bash
+docker run -d --name endfield-cloud-ops \
+  --restart unless-stopped \
+  -p 8787:8787 \
+  --shm-size=1g \
+  -v endfield-config:/home/maa/.config \
+  -v endfield-data:/home/maa/data \
+  xl233/endfield-cloud-ops:full
+```
+
+镜像内已经包含 MaaEnd 和 Python venv，启动后直接打开 `/setup` 创建管理员即可。  
+项目**不提供默认账号或默认密码**。
+
+### 面板运行时镜像
+
+适合已经有一套 MaaEnd 的机器，只替换前端/控制层：
 
 ```bash
 docker run -d --name endfield-cloud-ops \

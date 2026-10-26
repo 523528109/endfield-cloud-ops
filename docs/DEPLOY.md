@@ -148,13 +148,28 @@ http://<SERVER_IP>:8787/setup
 
 ### 5.2 Docker 部署（可选）
 
-如果不想在宿主机直接运行 `webui.py`，可以使用已构建的镜像：
+提供两个镜像：
 
-```text
-xl233/endfield-cloud-ops:latest
+| 标签 | 内容 |
+| --- | --- |
+| `xl233/endfield-cloud-ops:full` | 面板 + MaaEnd v2.35.0 + MaaFw venv + Chrome/sway/noVNC |
+| `xl233/endfield-cloud-ops:latest` | 面板运行时，需要挂载现有 MaaEnd/venv |
+
+**一体化部署（推荐）**：
+
+```bash
+docker pull xl233/endfield-cloud-ops:full
+
+docker run -d --name endfield-cloud-ops \
+  --restart unless-stopped \
+  -p 8787:8787 \
+  --shm-size=1g \
+  -v endfield-config:/home/maa/.config \
+  -v endfield-data:/home/maa/data \
+  xl233/endfield-cloud-ops:full
 ```
 
-镜像包含面板、Chrome、headless sway、wayvnc、websockify、noVNC 和 cron；MaaEnd 本体与 venv 仍从宿主机挂载：
+**只替换面板（已有 MaaEnd）**：
 
 ```bash
 docker pull xl233/endfield-cloud-ops:latest
@@ -180,7 +195,8 @@ http://<SERVER_IP>:8787/setup
 
 说明：
 
-- 必须挂载 `/home/maa/maaend` 和 `/home/maa/venv`，否则任务无法运行。
+- `:full` 已内置 MaaEnd 和 venv，不需要挂载 `/home/maa/maaend`、`/home/maa/venv`。
+- `:latest` 必须挂载 `/home/maa/maaend` 和 `/home/maa/venv`，否则任务无法运行。
 - 面板数据保存在 `endfield-data` 卷（`users.json`、`tasks.json`、`schedule.json` 等），Chrome/账号状态保存在 `endfield-config` 卷。
 - 容器内自带 Chrome + sway，任务和实时画面都在容器内执行；接管通过 `/vnc/*` 反代，不需要放行 6080。
 - 镜像默认是公开的；如果改为私有，先 `docker login`。

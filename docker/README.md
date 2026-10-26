@@ -1,10 +1,31 @@
 # Docker
 
-镜像：`xl233/endfield-cloud-ops:latest`
+提供两个镜像：
+
+| 标签 | 内容 | 用途 |
+| --- | --- | --- |
+| `xl233/endfield-cloud-ops:full` | 面板 + **MaaEnd v2.35.0** + MaaFw venv + Chrome + sway + noVNC | 一体化部署，无需挂载 MaaEnd |
+| `xl233/endfield-cloud-ops:latest` | 面板 + Chrome + sway + noVNC | 只替换面板，挂载现有 MaaEnd/venv |
 
 > 本项目**不提供默认账号或默认密码**。首次启动后访问 `/setup` 自行创建管理员账号（密码至少 8 位）。
 
-这是一个**面板运行时镜像**，包含：
+## 一体化镜像（推荐）
+
+```bash
+docker run -d --name endfield-cloud-ops \
+  --restart unless-stopped \
+  -p 8787:8787 \
+  --shm-size=1g \
+  -v endfield-config:/home/maa/.config \
+  -v endfield-data:/home/maa/data \
+  xl233/endfield-cloud-ops:full
+```
+
+镜像内已经包含 MaaEnd 和 Python venv，直接打开 `/setup` 初始化即可。
+
+## 面板运行时镜像
+
+包含：
 
 - 面板 `webui.py` / 静态前端 / web runner overlays
 - Google Chrome、headless sway、wayvnc、websockify、noVNC
@@ -37,6 +58,7 @@ docker run -d --name endfield-cloud-ops \
   -v endfield-data:/home/maa/data \
   xl233/endfield-cloud-ops:latest
 ```
+
 
 首次启动后打开：
 
