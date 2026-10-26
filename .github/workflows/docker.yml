@@ -86,6 +86,7 @@ jobs:
 
       - name: Smoke test full image
         run: |
+          docker run --rm --entrypoint /bin/bash xl233/endfield-cloud-ops:full -lc 'test -x /home/maa/maaend/MaaEnd && /home/maa/venv/bin/python -c "import maa; print(maa.__file__)"'
           docker run -d --name endfield-full-smoke -p 8788:8787 xl233/endfield-cloud-ops:full
           ok=0
           for i in $(seq 1 45); do
