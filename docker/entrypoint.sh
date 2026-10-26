@@ -27,6 +27,7 @@ if [ ! -f "$MAAEND_DATA_DIR/tasks.json" ] \
     MAAEND_ROOT=/home/maa/maaend \
     MAAEND_WEBUI_DIR=/home/maa/maaend-webui \
     MAAEND_DATA_DIR="$MAAEND_DATA_DIR" \
+    PYTHONPATH=/home/maa/maaend-web/web/linux \
     /home/maa/venv/bin/python /home/maa/maaend-webui/gen_catalog.py || true
 fi
 

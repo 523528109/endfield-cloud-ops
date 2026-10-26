@@ -60,6 +60,7 @@ RUN rm -rf /home/maa/maaend/web \
     && MAAEND_ROOT=/home/maa/maaend \
        MAAEND_WEBUI_DIR=/home/maa/maaend-webui \
        MAAEND_DATA_DIR=/home/maa/data \
+       PYTHONPATH=/home/maa/maaend-web/web/linux \
        /home/maa/venv/bin/python /home/maa/maaend-webui/gen_catalog.py \
     && chown -R maa:maa /home/maa /run/user/1000
 
