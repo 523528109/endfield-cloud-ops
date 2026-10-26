@@ -306,6 +306,18 @@ tail -30 /tmp/sway-endfield.log
 
 `WebStartGame` 最长 2 小时；普通任务 420 秒。排队时任务保持 running 是正常的，不要反复点停止。
 
+### 任务卡在「帝江号」主菜单
+
+如果日志里 `InMenuList` / `CheckMenuListColor` 识别失败，但游戏已经进入主菜单，可重新应用本地兼容补丁：
+
+```bash
+cd /home/maa/maaend
+sudo -u maa env MAAEND_ROOT=/home/maa/maaend \
+  /home/maa/venv/bin/python web/linux/homesrv/apply_local_patches.py
+```
+
+补丁只移除 `InMenuList` 里的颜色断言，保留两个 OCR 检查；修改前会备份 `resource/pipeline/nodes.json`。`auto_update.sh` 在 MaaEnd 升级后会自动执行一次。
+
 ### 任务库 / 预设为空
 
 ```bash

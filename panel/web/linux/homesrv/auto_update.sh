@@ -21,6 +21,7 @@ PROXY="${MAAEND_PROXY:-}"
 KEEP=4
 CHECK_PY="$WEB/linux/homesrv/post_upgrade_check.py"
 AUDIT_PY="$WEB/linux/homesrv/option_audit.py"
+PATCH_PY="$WEB/linux/homesrv/apply_local_patches.py"
 PY="$HOME/venv/bin/python"
 [ -x "$PY" ] || PY="python3"
 
@@ -233,6 +234,17 @@ fi
 ln -sfn "$ROOT/maafw" "$ROOT/agent/maafw"
 rm -rf "$TMP"
 log "已替换为 $TAG"
+
+# 4b) 本地兼容补丁：当前云游戏主菜单是描边黄色按钮，v2.35.0 的
+# CheckMenuListColor 会误判，导致 SceneAnyEnterWorld 卡在主菜单。
+# 补丁只移除 InMenuList 里的颜色断言，保留两个 OCR 检查；可重复执行。
+if [ -f "$PATCH_PY" ]; then
+  if (cd "$ROOT" && timeout 60 "$PY" "$PATCH_PY" >>"$LOG" 2>&1); then
+    log "本地兼容补丁已应用"
+  else
+    log "本地兼容补丁失败（继续自检）"
+  fi
+fi
 
 # 5) 自检：15 个关键节点必须都在（覆盖层 + base）
 if [ -f "$CHECK_PY" ]; then

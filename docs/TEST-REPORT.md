@@ -62,3 +62,11 @@
 - Chrome 未启动、页面没有时长卡片或未安装 Tesseract 时返回 `ok=false`，面板显示 `--`，不影响任务运行。
 - Docker `latest` 和 `full` 镜像都安装 `tesseract-ocr` + `tesseract-ocr-chi-sim`，CI smoke test 会检查 `chi_sim` 语言包。
 
+## 云游戏主菜单识别兼容（2026-10-27）
+
+- 现象：云游戏登录态恢复后，MaaEnd `WebStartGameEntry` 能进入游戏，但 `SceneAnyEnterWorld` 卡在「帝江号」主菜单，`VisitFriends` 等任务全部失败。
+- 日志：`InMenuList` 的 `CheckMenuListColor` 只命中 `29` 个目标像素，配置要求 `100`；旧版成功截图为 `356`，说明当前云 UI 的黄色按钮变成描边样式，颜色判定不再适用。
+- 修复：在本地 `resource/pipeline/nodes.json` 的 `InMenuList.all_of` 中移除 `CheckMenuListColor`，保留 `CheckMenuListText` + `CheckMenuListText2` 两个 OCR 条件；修改前备份为 `backups/nodes.json.pre-menu-patch-*`。
+- 验证：快速日常实测 `VisitFriends` 成功（18.1s）、`DijiangRewards` 成功（51.1s）、`CreditShoppingN2` 成功（114.1s）；`SellProduct` 已进入据点交易界面，测试到该界面后手动停止，未继续等待。
+- 持久化：新增 `panel/web/linux/homesrv/apply_local_patches.py`，`auto_update.sh` 在 MaaEnd 更新后自动重复应用；脚本幂等，已应用时输出 `menu patch: not needed`。
+
