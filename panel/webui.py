@@ -46,6 +46,7 @@ WAYVNC_CFG = WAYVNC_CFG_DIR + "/config"
 VNC_TOKEN_FILE = DATA_DIR + "/vnc-token"
 NOVNC_DIR = PANEL_DIR + "/novnc"
 PROGRESS_FILE = DATA_DIR + "/progress.json"
+HISTORY_DIR = os.environ.get("MAAEND_HISTORY_DIR", DATA_DIR + "/history")
 PORT = int(os.environ.get("WEBUI_PORT", "8787"))
 BIND = os.environ.get("WEBUI_BIND", "0.0.0.0")
 FULL_DAILY = ["WebStartGame", "VisitFriends", "DijiangRewards", "CreditShoppingN2",
@@ -156,6 +157,26 @@ def catalog_payload():
         if isinstance(task, dict) and task.get("name"):
             task["optionValues"] = values.get(task["name"], task.get("optionValues") or {})
     return catalog
+
+
+def history_payload(limit=50):
+    try:
+        files = sorted(glob.glob(HISTORY_DIR + "/*.json"),
+                       key=os.path.getmtime, reverse=True)
+    except Exception:
+        files = []
+    runs = []
+    live = busy()
+    for path in files[:limit]:
+        try:
+            with open(path, encoding="utf-8") as f:
+                rec = json.load(f)
+        except Exception:
+            continue
+        if rec.get("status") == "running" and not live:
+            rec["status"] = "interrupted"
+        runs.append(rec)
+    return {"runs": runs, "total": len(files), "limit": limit}
 
 
 def _maa_locale():
@@ -1174,6 +1195,8 @@ def start_daily(tasks="", instance=None, planned=None):
     env.update({"MAAEND_TASKS": tasks, "HOME": BASE,
                 "XDG_RUNTIME_DIR": "/run/user/1000",
                 "MAAEND_CHROME": "/usr/bin/google-chrome",
+                "MAAEND_HISTORY_DIR": HISTORY_DIR,
+                "MAAEND_TRIGGER": "panel",
                 "MAAEND_PROFILE": active_profile()})
     if instance:
         env["MAAEND_INSTANCE"] = instance
@@ -1675,6 +1698,15 @@ class Handler(BaseHTTPRequestHandler):
             return
         if p == "/api/presets":
             self._send(200, json.dumps({"presets": maa_presets()}, ensure_ascii=False).encode(), "application/json")
+            return
+        if p == "/api/history":
+            try:
+                limit = int((parse_qs(parsed.query).get("limit") or ["50"])[0])
+            except ValueError:
+                limit = 50
+            limit = max(1, min(limit, 200))
+            self._send(200, json.dumps(history_payload(limit), ensure_ascii=False).encode(),
+                       "application/json")
             return
         if p == "/api/maa/info":
             who = principal(self) or {}

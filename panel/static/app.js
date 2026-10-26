@@ -31,6 +31,7 @@
   const NAV_TITLES = {
     live: "CONSOLE",
     library: "TASK LIBRARY",
+    history: "RUN HISTORY",
     log: "SYSTEM LOG",
     settings: "SYSTEM"
   };
@@ -48,6 +49,8 @@
     users: [],
     catalog: [],
     meta: {},
+    history: [],
+    historyTimer: 0,
     queue: loadQueue(),
     optionTask: null,
     optionValues: {},
@@ -504,6 +507,9 @@
     const running = !!s.running;
     const starting = !!s.starting;
     const busy = running || starting;
+    const wasBusy = !!state.wasBusy;
+    state.wasBusy = busy;
+    if (wasBusy && !busy) loadHistory();
     const success = tasks.filter((t) => states[t] === "success").length;
     const fail = tasks.filter((t) => states[t] === "fail").length;
     const done = success + fail;
@@ -774,6 +780,160 @@
       : "默认全套 11 项，跑完自动收尾；单项失败会继续下一项，不会中断整轮。");
     const startLabel = $("startBtn") && $("startBtn").querySelector("span");
     if (startLabel) startLabel.textContent = presetActionLabel(current);
+  }
+
+  /* ---------------- run history ---------------- */
+  function fmtHistoryTime(ts) {
+    if (!ts) return "—";
+    const d = new Date(Number(ts) * 1000);
+    if (isNaN(d.getTime())) return "—";
+    return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function fmtLongDuration(sec) {
+    if (sec == null || isNaN(Number(sec))) return "—";
+    const n = Math.max(0, Number(sec));
+    if (n >= 3600) return `${Math.floor(n / 3600)}h${pad(Math.floor((n % 3600) / 60))}m`;
+    if (n >= 60) return `${Math.floor(n / 60)}m${pad(Math.round(n % 60))}s`;
+    return `${Math.round(n)}s`;
+  }
+
+  function historyStatusMeta(run) {
+    if (run.status === "running") return { code: "RUN", cls: "running", text: "进行中" };
+    if (run.status === "interrupted") return { code: "STOP", cls: "interrupted", text: "已中断" };
+    if (run.total && run.fail === 0 && run.success === run.total) {
+      return { code: "OK", cls: "ok", text: "完成" };
+    }
+    if (run.success > 0) return { code: "PART", cls: "partial", text: "部分完成" };
+    return { code: "FAIL", cls: "fail", text: "失败" };
+  }
+
+  function historyInstanceLabel(instance) {
+    const found = state.presets.find((p) => p.id === instance);
+    if (found) return found.label;
+    return String(instance || "运行").replace(/^preset:/, "");
+  }
+
+  function renderHistory() {
+    const list = $("historyList");
+    if (!list) return;
+    const runs = state.history || [];
+    setText("historyCount", `${runs.length} RUNS`);
+
+    const finished = runs.filter((r) => r.status !== "running");
+    const last = runs[0];
+    setText("histLast", last ? fmtHistoryTime(last.started) : "—");
+    setText("histLastSub", last ? `${last.total || 0} TASKS · ${last.success || 0} OK` : "NO RUNS");
+
+    const okCount = finished.reduce((sum, r) => sum + (Number(r.success) || 0), 0);
+    const totalCount = finished.reduce((sum, r) => sum + (Number(r.total) || 0), 0);
+    setText("histRate", totalCount ? `${Math.round(okCount / totalCount * 100)}%` : "—");
+    setText("histRateSub", `${finished.length} FINISHED RUNS`);
+
+    const timed = runs.filter((r) => Number(r.duration_seconds) > 0);
+    const avg = timed.length
+      ? timed.reduce((sum, r) => sum + Number(r.duration_seconds), 0) / timed.length : 0;
+    setText("histAvg", avg ? fmtLongDuration(avg) : "—");
+    setText("histAvgSub", `${timed.length} TIMED RUNS`);
+
+    const queues = runs.filter((r) => Number(r.queue_seconds) > 0);
+    const avgQueue = queues.length
+      ? queues.reduce((sum, r) => sum + Number(r.queue_seconds), 0) / queues.length : 0;
+    setText("histQueue", avgQueue ? fmtLongDuration(avgQueue) : "—");
+    setText("histQueueSub", `${queues.length} WITH QUEUE`);
+
+    list.textContent = "";
+    if (!runs.length) {
+      const empty = document.createElement("div");
+      empty.className = "history-empty";
+      empty.textContent = "暂无历史运行记录。完成一次任务后会自动写入。";
+      list.appendChild(empty);
+      return;
+    }
+
+    runs.forEach((run) => {
+      const item = document.createElement("details");
+      item.className = "run-item";
+      const summary = document.createElement("summary");
+
+      const time = document.createElement("span");
+      time.className = "run-time";
+      time.textContent = fmtHistoryTime(run.started);
+
+      const name = document.createElement("span");
+      name.className = "run-name";
+      name.textContent = `${historyInstanceLabel(run.instance)} · ${run.total || 0} 项`;
+
+      const queue = document.createElement("span");
+      queue.className = "run-queue run-meta";
+      queue.title = "排队 / 启动时长";
+      queue.textContent = `Q ${fmtLongDuration(run.queue_seconds)}`;
+
+      const dur = document.createElement("span");
+      dur.className = "run-dur";
+      dur.textContent = `D ${fmtLongDuration(run.duration_seconds)}`;
+
+      const ok = document.createElement("span");
+      ok.className = "run-ok";
+      ok.textContent = `${run.success || 0}/${run.total || 0}`;
+
+      const meta = historyStatusMeta(run);
+      const status = document.createElement("span");
+      status.className = `status-tag run-status ${meta.cls}`;
+      status.textContent = meta.code;
+      status.title = `${meta.text}${run.finished ? " · " + fmtHistoryTime(run.finished) : ""}`;
+
+      summary.append(time, name, queue, dur, ok, status);
+      item.appendChild(summary);
+
+      const detail = document.createElement("div");
+      detail.className = "run-detail";
+      const tasks = Array.isArray(run.tasks) ? run.tasks : [];
+      if (!tasks.length) {
+        const empty = document.createElement("div");
+        empty.className = "run-task-empty";
+        empty.textContent = "这次运行没有逐项任务记录。";
+        detail.appendChild(empty);
+      } else {
+        const head = document.createElement("div");
+        head.className = "run-task-head";
+        ["TASK", "STATE", "TIME", "LAST NODE"].forEach((text) => {
+          const cell = document.createElement("span");
+          cell.textContent = text;
+          head.appendChild(cell);
+        });
+        detail.appendChild(head);
+        tasks.forEach((task) => {
+          const row = document.createElement("div");
+          row.className = "run-task";
+          const taskName = document.createElement("b");
+          taskName.textContent = taskLabel(task.name);
+          const state = document.createElement("span");
+          const stateKey = task.state || "pending";
+          const stateText = { success: "OK", fail: "ERR", running: "RUN", pending: "STBY" }[stateKey] || stateKey;
+          state.className = `st-${stateKey}`;
+          state.textContent = stateText;
+          const timeCell = document.createElement("span");
+          timeCell.textContent = task.seconds != null ? fmtLongDuration(task.seconds) : "—";
+          const node = document.createElement("code");
+          node.textContent = task.last_node || (task.timeout ? "TIMEOUT" : "—");
+          row.append(taskName, state, timeCell, node);
+          detail.appendChild(row);
+        });
+      }
+      item.appendChild(detail);
+      list.appendChild(item);
+    });
+  }
+
+  async function loadHistory() {
+    try {
+      const data = await api("/api/history?limit=50");
+      state.history = Array.isArray(data.runs) ? data.runs : [];
+      renderHistory();
+    } catch (e) {
+      /* keep last */
+    }
   }
 
   function renderLibrary(filter = "") {
@@ -1902,12 +2062,16 @@ body{display:grid;place-items:center}
   function startPolling() {
     clearInterval(state.pollTimer);
     clearInterval(state.memTimer);
+    clearInterval(state.historyTimer);
     state.pollTimer = setInterval(() => {
       if (!document.hidden) refreshStatus(true);
     }, 2500);
     state.memTimer = setInterval(() => {
       if (!document.hidden) refreshMem();
     }, 1000);
+    state.historyTimer = setInterval(() => {
+      if (!document.hidden) loadHistory();
+    }, 30000);
     scheduleShots();
   }
 
@@ -1929,6 +2093,7 @@ body{display:grid;place-items:center}
     $("stopBtn").addEventListener("click", stopDaily);
     $("refreshBtn").addEventListener("click", refreshAll);
     $("netRetry").addEventListener("click", refreshAll);
+    $("historyRefresh").addEventListener("click", loadHistory);
 
     $("expandBtn").addEventListener("click", openShot);
     $("viewport").addEventListener("click", openShot);
@@ -2071,7 +2236,8 @@ body{display:grid;place-items:center}
         refreshSchedule(),
         refreshGameAccounts(false),
         refreshMaaInfo(),
-        loadPresets()
+        loadPresets(),
+        loadHistory()
       ]);
       refreshShot();
       toast("已刷新");
@@ -2096,7 +2262,7 @@ body{display:grid;place-items:center}
     setTimeout(markBooted, 1800);
     await refreshMe();
     await refreshMaaInfo();
-    await Promise.allSettled([loadCatalog(), loadPresets(), refreshSettings(), refreshSchedule(true), refreshGameAccounts(false)]);
+    await Promise.allSettled([loadCatalog(), loadPresets(), loadHistory(), refreshSettings(), refreshSchedule(true), refreshGameAccounts(false)]);
     await refreshStatus();
     startPolling();
     refreshShot();

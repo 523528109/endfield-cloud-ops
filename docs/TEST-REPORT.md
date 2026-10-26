@@ -44,3 +44,13 @@
 - 密码使用 PBKDF2-HMAC-SHA256（26 万次迭代）加盐存储。
 - 所有 `/api/*` 在存在账号后都需要会话或 token。
 - 运行时账号、token、Cookie、`mxu-MaaEnd.json` 不进入仓库。
+
+## 历史运行（2026-10-27）
+
+- runner 每次启动写入 `history/<run-id>.json`，每个任务后更新，结束写最终记录；保留最近 200 次。
+- 记录字段：开始/结束时间、总耗时、排队/启动时长、实例/触发来源、任务数、成功/失败/待执行数、逐项任务状态/耗时/最后节点/重试次数。
+- `/api/history?limit=50` 返回最近记录；面板「历史运行」页显示最近一次、成功率、平均耗时、平均排队，并可展开逐项任务。
+- 自测 fixture：2 项任务、1 成功 1 失败、排队 35.2s、总耗时 125s，API/UI 统计与明细正常。
+- 真实启动 QuickDaily 后停止，runner 成功写入独立的 history 文件；测试记录已清理。
+- 新历史目录：`/home/maa/maaend-webui/history`（Docker 使用 `/home/maa/data/history`）。
+

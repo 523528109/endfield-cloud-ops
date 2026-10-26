@@ -19,6 +19,7 @@
 
 - **实时画面**：Chrome CDP `Page.startScreencast` 推流，支持 2 秒 1 张、1 秒 1 张、1 秒 3 张、1 秒 5 张；只影响面板预览，不改变 Maa 的识别通道。
 - **Maa 内置预设**：直接读取 MaaEnd `tasks/preset/*.json`，提供全套日常、快速日常、实时辅助、基质刷取，以及面板定时任务。
+- **历史运行**：每次运行自动记录排队/启动时长、任务结果、成功数和总耗时；在「历史运行」页可以展开查看逐项任务。
 - **任务库 / 待选队列**：从 MaaEnd 最新 `interface.json` 生成任务目录；带 MXU `optionValues` 设置编辑（switch / select / checkbox / input，含嵌套子选项）。
 - **定时运行**：面板里维护 `HH:MM` 时间点，写入 `maa` 用户 crontab；默认 04:00 / 16:00。
 - **Maa 更新**：检查 GitHub Release → 下载 → 备份 → 替换 → `post_upgrade_check.py` 自检 → `option_audit.py` 覆盖项检查；失败自动回滚。

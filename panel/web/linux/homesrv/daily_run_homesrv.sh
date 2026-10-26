@@ -38,6 +38,7 @@ if [ -S "${XDG_RUNTIME_DIR:-/nonexistent}/bus" ]; then
 fi
 export MAAEND_DIST="$ROOT"
 export MAAEND_ROOT="$ROOT"
+export MAAEND_HISTORY_DIR="${MAAEND_HISTORY_DIR:-${MAAEND_DATA_DIR:-$HOME/maaend-webui}/history}"
 export MAAEND_WEB="$WEB"
 export MAAEND_RES_DIRS="$ROOT/resource:$ROOT/web/resource_web:$ROOT/web/linux/resource_web_linux:$ROOT/web/resource_web_homesrv"
 export MAA_AGENT_BIN="$ROOT/agent/go-service"

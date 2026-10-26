@@ -15,7 +15,7 @@
 <link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
 <link rel="preload" href="/static/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/style.css?v=20261024l">
+<link rel="stylesheet" href="/static/style.css?v=20261024m">
 </head>
 <body>
 <a class="skip" href="#main">跳到正文</a>
@@ -62,13 +62,17 @@
         <svg class="icon" aria-hidden="true"><use href="#i-tasks"/></svg>
         <span>任务库</span><span class="end">02</span>
       </a>
+      <a class="rail-item" href="#history" data-section="history">
+        <svg class="icon" aria-hidden="true"><use href="#i-log"/></svg>
+        <span>历史运行</span><span class="end">03</span>
+      </a>
       <a class="rail-item" href="#log" data-section="log">
         <svg class="icon" aria-hidden="true"><use href="#i-log"/></svg>
-        <span>运行日志</span><span class="end">03</span>
+        <span>运行日志</span><span class="end">04</span>
       </a>
       <a class="rail-item" href="#settings" data-section="settings">
         <svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg>
-        <span>系统设置</span><span class="end">04</span>
+        <span>系统设置</span><span class="end">05</span>
       </a>
     </nav>
 
@@ -282,6 +286,29 @@
         </div>
       </section>
 
+      <section class="section" id="history" data-nav="history">
+        <header class="section-head">
+          <div>
+            <p class="eyebrow">RUN HISTORY</p>
+            <h2>历史运行</h2>
+            <p class="desc">自动记录每次运行的排队/启动时长、任务结果、成功数与总耗时；点开一行查看逐项任务。</p>
+          </div>
+          <div class="section-actions">
+            <span class="status-tag" id="historyCount">— RUNS</span>
+            <button class="btn btn-text btn-sm" id="historyRefresh" type="button">刷新</button>
+          </div>
+        </header>
+        <div class="history-summary" id="historySummary">
+          <div class="history-stat"><span class="micro">LAST RUN</span><b id="histLast">—</b><small id="histLastSub">—</small></div>
+          <div class="history-stat"><span class="micro">SUCCESS RATE</span><b id="histRate">—</b><small id="histRateSub">FINISHED RUNS</small></div>
+          <div class="history-stat"><span class="micro">AVG RUNTIME</span><b id="histAvg">—</b><small id="histAvgSub">ALL RUNS</small></div>
+          <div class="history-stat"><span class="micro">AVG QUEUE</span><b id="histQueue">—</b><small id="histQueueSub">START / QUEUE</small></div>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="history-empty">暂无历史运行记录。完成一次任务后会自动写入。</div>
+        </div>
+      </section>
+
       <section class="section section-dark" id="log" data-nav="log" data-theme="dark">
         <header class="section-head">
           <div>
@@ -431,6 +458,7 @@
   <nav class="mm-nav" aria-label="主导航">
     <a class="mm-item" href="#live" data-section="live"><svg class="icon" aria-hidden="true"><use href="#i-console"/></svg><span>控制台</span></a>
     <a class="mm-item" href="#library" data-section="library"><svg class="icon" aria-hidden="true"><use href="#i-tasks"/></svg><span>任务库</span></a>
+    <a class="mm-item" href="#history" data-section="history"><svg class="icon" aria-hidden="true"><use href="#i-log"/></svg><span>历史运行</span></a>
     <a class="mm-item" href="#log" data-section="log"><svg class="icon" aria-hidden="true"><use href="#i-log"/></svg><span>运行日志</span></a>
     <a class="mm-item" href="#settings" data-section="settings"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg><span>系统设置</span></a>
   </nav>
@@ -699,6 +727,6 @@
 </div>
 
 <noscript><div style="padding:24px">需要启用 JavaScript 才能使用控制台。</div></noscript>
-<script src="/static/app.js?v=20261024l"></script>
+<script src="/static/app.js?v=20261024m"></script>
 </body>
 </html>

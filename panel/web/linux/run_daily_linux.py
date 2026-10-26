@@ -9,6 +9,8 @@
 from __future__ import annotations
 
 import argparse
+import atexit
+import glob
 import json
 import os
 import subprocess
@@ -149,6 +151,8 @@ def log(msg):
 
 
 PROGRESS = os.environ.get('MAAEND_PROGRESS', os.path.expanduser('~/maaend-webui/progress.json'))
+HISTORY_DIR = os.environ.get('MAAEND_HISTORY_DIR', os.path.expanduser('~/maaend-webui/history'))
+HISTORY_KEEP = 200
 PROGRESS_STATE = {}
 
 
@@ -163,16 +167,94 @@ def write_progress():
         pass
 
 
+def _history_record(final=False):
+    p = PROGRESS_STATE
+    tasks = []
+    details = p.get('details') or {}
+    states = p.get('states') or {}
+    for name in p.get('tasks') or []:
+        d = details.get(name) or {}
+        tasks.append({
+            'name': name,
+            'state': states.get(name, 'pending'),
+            'seconds': d.get('seconds'),
+            'last_node': d.get('last_node'),
+            'timeout': bool(d.get('timeout')),
+            'attempt': d.get('attempt'),
+        })
+    started = float(p.get('started') or time.time())
+    now = time.time()
+    durations = p.get('durations') or {}
+    queue = durations.get('WebStartGame') or p.get('startup_seconds') or 0
+    success = sum(1 for t in tasks if t['state'] == 'success')
+    fail = sum(1 for t in tasks if t['state'] == 'fail')
+    return {
+        'id': p.get('history_id'),
+        'started': round(started, 3),
+        'finished': round(now, 3) if final else None,
+        'duration_seconds': round(max(0.0, now - started), 1),
+        'queue_seconds': round(float(queue), 1),
+        'startup_seconds': round(float(p.get('startup_seconds') or 0), 1),
+        'instance': p.get('instance') or '',
+        'trigger': p.get('trigger') or 'manual',
+        'status': 'done' if final else 'running',
+        'total': len(tasks),
+        'success': success,
+        'fail': fail,
+        'pending': len(tasks) - success - fail,
+        'tasks': tasks,
+    }
+
+
+def prune_history():
+    try:
+        files = sorted(glob.glob(os.path.join(HISTORY_DIR, '*.json')),
+                       key=os.path.getmtime)
+        for path in files[:-HISTORY_KEEP]:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+    except Exception:
+        pass
+
+
+def write_history(final=False):
+    hid = PROGRESS_STATE.get('history_id')
+    if not hid:
+        return
+    try:
+        os.makedirs(HISTORY_DIR, exist_ok=True)
+        path = os.path.join(HISTORY_DIR, hid + '.json')
+        tmp = path + '.tmp'
+        with open(tmp, 'w', encoding='utf-8') as f:
+            json.dump(_history_record(final), f, ensure_ascii=False)
+        os.replace(tmp, path)
+        if final:
+            prune_history()
+    except Exception:
+        pass
+
+
 def record(obj):
     try:
         if isinstance(obj, dict) and obj.get('name'):
             name = obj['name']
-            PROGRESS_STATE.setdefault('states', {})[name] = 'success' if obj.get('succeeded') else 'fail'
+            state = 'success' if obj.get('succeeded') else 'fail'
+            PROGRESS_STATE.setdefault('states', {})[name] = state
             if obj.get('seconds') is not None:
                 PROGRESS_STATE.setdefault('durations', {})[name] = obj['seconds']
+            PROGRESS_STATE.setdefault('details', {})[name] = {
+                'state': state,
+                'seconds': obj.get('seconds'),
+                'last_node': obj.get('last_node'),
+                'timeout': bool(obj.get('timeout')),
+                'attempt': obj.get('attempt'),
+            }
             PROGRESS_STATE['current'] = None
             PROGRESS_STATE['updated'] = time.time()
             write_progress()
+            write_history()
     except Exception:
         pass
     os.makedirs(os.path.dirname(OUT_JSONL), exist_ok=True)
@@ -232,14 +314,21 @@ def main():
 
     PROGRESS_STATE.clear()
     PROGRESS_STATE.update({
+        'history_id': time.strftime('%Y%m%d-%H%M%S') + '-' + str(os.getpid()),
+        'instance': a.instance,
+        'trigger': os.environ.get('MAAEND_TRIGGER', 'manual'),
         'started': time.time(),
+        'startup_seconds': 0,
         'tasks': [p['name'] for p in plan],
         'states': {p['name']: 'pending' for p in plan},
         'durations': {},
+        'details': {},
         'current': None,
         'updated': time.time(),
     })
     write_progress()
+    write_history()
+    atexit.register(lambda: write_history(final=True))
     res = Resource()
     missing = [d for d in DIRS if not os.path.isdir(d)]
     if missing:
@@ -251,6 +340,7 @@ def main():
     log(f'资源加载: {res.loaded}')
     if not res.loaded:
         log('[X] 资源加载失败，任务不可能跑对，直接退出')
+        write_history(final=True)
         return 3
 
     # use_win32_vk_code=True：管线的动作节点用的是 Win32 虚拟键码（Alt=18），
@@ -259,6 +349,7 @@ def main():
     ctrl.post_connection().wait()
     log(f'控制器: connected={ctrl.connected}')
     if not ctrl.connected:
+        write_history(final=True)
         return 4
 
     tasker = Tasker()
@@ -333,7 +424,13 @@ def main():
                             '--wait', '12'], timeout=90, capture_output=True)
         except Exception as e:
             log(f'    (重置页面失败: {str(e)[:60]})')
-        return run_node('WebStartGameEntry', cap=7200)
+        t0 = time.time()
+        ok = run_node('WebStartGameEntry', cap=7200)
+        PROGRESS_STATE['startup_seconds'] = round(
+            float(PROGRESS_STATE.get('startup_seconds') or 0) + (time.time() - t0), 1)
+        PROGRESS_STATE['updated'] = time.time()
+        write_history()
+        return ok
 
     def ensure_in_game_once(tag='[启动]'):
         """开跑前跑一次 WebStartGameEntry，由它自己判断该不该启动。
@@ -346,7 +443,12 @@ def main():
         外层脚本不再做单帧判断（会漏判）或轮询（已在游戏里时白等）。
         """
         log(f'  {tag} 先跑 WebStartGameEntry（已在游戏内会自动跳过）')
+        t0 = time.time()
         ok = run_node('WebStartGameEntry', cap=7200)
+        PROGRESS_STATE['startup_seconds'] = round(
+            float(PROGRESS_STATE.get('startup_seconds') or 0) + (time.time() - t0), 1)
+        PROGRESS_STATE['updated'] = time.time()
+        write_history()
         log(f'    WebStartGameEntry -> {ok}')
         if not ok:
             log('  ! 启动失败，硬重置一次再试')
@@ -405,6 +507,7 @@ def main():
             pass
     ok = sum(1 for r in results if r['succeeded'])
     log(f'通过 {ok} / {len(results)}')
+    write_history(final=True)
     return 0 if ok == len(results) else 7
 
 

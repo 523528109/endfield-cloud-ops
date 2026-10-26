@@ -6,6 +6,7 @@ export XDG_RUNTIME_DIR=/run/user/1000
 export XDG_SESSION_TYPE=wayland
 export MAAEND_CHROME="${MAAEND_CHROME:-/usr/bin/google-chrome}"
 export MAAEND_DATA_DIR="${MAAEND_DATA_DIR:-/home/maa/data}"
+export MAAEND_HISTORY_DIR="${MAAEND_HISTORY_DIR:-$MAAEND_DATA_DIR/history}"
 
 mkdir -p "$XDG_RUNTIME_DIR" "$MAAEND_DATA_DIR" /home/maa/.config /home/maa/maaend
 chmod 700 "$XDG_RUNTIME_DIR"
